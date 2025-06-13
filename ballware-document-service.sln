@@ -10,6 +10,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Meta.Client", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Storage.Client", "src\Ballware.Storage.Client\Ballware.Storage.Client.csproj", "{B74BFA39-1DD6-40B2-BE98-E0A7A07E65EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Engine.Dx", "src\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj", "{468B6BA3-482F-4330-806E-831D1722ABFD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Authorization", "src\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj", "{48D0E156-B0CC-481E-A10A-AB409197E91B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Metadata", "src\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj", "{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +42,17 @@ Global
 		{B74BFA39-1DD6-40B2-BE98-E0A7A07E65EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B74BFA39-1DD6-40B2-BE98-E0A7A07E65EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B74BFA39-1DD6-40B2-BE98-E0A7A07E65EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{468B6BA3-482F-4330-806E-831D1722ABFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{468B6BA3-482F-4330-806E-831D1722ABFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{468B6BA3-482F-4330-806E-831D1722ABFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{468B6BA3-482F-4330-806E-831D1722ABFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

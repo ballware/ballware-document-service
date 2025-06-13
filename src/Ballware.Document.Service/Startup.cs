@@ -1,17 +1,16 @@
+using System.Globalization;
+using Ballware.Document.Authorization;
+using Ballware.Document.Engine.Dx;
 using Ballware.Document.Jobs;
 using Ballware.Document.Service.Configuration;
 using Ballware.Generic.Client;
 using Ballware.Meta.Client;
 using Ballware.Storage.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi.Models;
@@ -22,7 +21,6 @@ using Serilog;
 
 namespace Ballware.Document.Service;
 
-
 public class Startup(IWebHostEnvironment environment, ConfigurationManager configuration, IServiceCollection services)
 {
     private readonly string ClaimTypeScope = "scope";
@@ -32,7 +30,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
     private IServiceCollection Services { get; } = services;
 
     public void InitializeServices()
-    {
+    {   
         CorsOptions? corsOptions = Configuration.GetSection("Cors").Get<CorsOptions>();
         AuthorizationOptions? authorizationOptions =
             Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
@@ -81,6 +79,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             throw new ConfigurationException("Required configuration for genericClient is missing");
         }
 
+        services.Configure<FormOptions>(x =>
+        {
+            x.ValueLengthLimit = int.MaxValue;
+        });
+        
         Services.AddMemoryCache();
         Services.AddDistributedMemoryCache();
         
@@ -138,9 +141,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         {
             options.SerializerOptions.PropertyNamingPolicy = null;
         });
+
+        Services.AddBallwareDocumentAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
         
         Services.AddHttpContextAccessor();
-
+        
         Services.AddMvcCore()
             .AddApiExplorer();
 
@@ -148,7 +153,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.Configure<QuartzOptions>(Configuration.GetSection("Quartz"));
         Services.AddBallwareDocumentBackgroundJobs();
-
+        
         Services.AddClientCredentialsTokenManagement()
             .AddClient("meta", client =>
             {
@@ -217,6 +222,8 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddAutoMapper(config => {});
         
         Services.AddEndpointsApiExplorer();
+
+        Services.AddBallwareDevExpressReporting();
         
         if (swaggerOptions != null)
         {
@@ -291,10 +298,28 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         });
 
         app.UseCors();
+        
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
+        
         app.UseRouting();
 
         app.UseAuthorization();
+        
+        app.Use(async (context, next) =>
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de-DE");
+            await next();
+        });
+        
+        app.UseBallwareDevExpressReporting();
 
+        app.MapControllers();
+        app.MapRazorPages();
+        
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;
 

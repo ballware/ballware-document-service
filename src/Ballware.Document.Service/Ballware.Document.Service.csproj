@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <IsPackable>false</IsPackable>
@@ -31,20 +31,18 @@
         <PackageReference Include="Quartz.AspNetCore" Version="3.8.1" />
         <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.8.1" />
         <PackageReference Include="Quartz.Serialization.Json" Version="3.8.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj" />
       <ProjectReference Include="..\Ballware.Document.Jobs\Ballware.Document.Jobs.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
       <ProjectReference Include="..\Ballware.Generic.Client\Ballware.Generic.Client.csproj" />
       <ProjectReference Include="..\Ballware.Meta.Client\Ballware.Meta.Client.csproj" />
       <ProjectReference Include="..\Ballware.Storage.Client\Ballware.Storage.Client.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="appsettings.json" />
-      <Content Include="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
     </ItemGroup>
 
 </Project>

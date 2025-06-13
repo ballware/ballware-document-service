@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RazorClassLibrary>true</RazorClassLibrary>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="24.2.7" />
+      <PackageReference Include="DevExpress.Drawing" Version="24.2.7" />
+      <PackageReference Include="DevExpress.Drawing.Skia" Version="24.2.7" />
+      <PackageReference Include="DevExpress.Pdf.SkiaRenderer" Version="24.2.7" />
+      <PackageReference Include="DevExpress.Web.Reporting.Common" Version="24.2.7" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
+    </ItemGroup>
+
+</Project>
