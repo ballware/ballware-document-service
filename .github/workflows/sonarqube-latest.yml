@@ -42,6 +42,9 @@ jobs:
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cs.dotcover.reportsPaths="coverage.html"
         
+      - name: Restore dependencies
+        run: dotnet restore ballware-document-service.sln -s https://api.nuget.org/v3/index.json -s "${{ secrets.DEVEXPRESS_NUGETFEED }}"
+        
       - name: Build solution
         run: dotnet build ballware-document-service.sln --no-incremental --configuration Release
 
