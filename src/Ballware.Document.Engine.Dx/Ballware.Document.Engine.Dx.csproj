@@ -42,4 +42,14 @@
       </Content>
     </ItemGroup>
 
+    <Target Name="NpmInstall" BeforeTargets="Build">
+        <Message Text="Running 'npm install'..." Importance="high" />
+        <Exec Command="npm install" WorkingDirectory="$(ProjectDir)" />
+    </Target>
+
+    <Target Name="WebpackBuild" AfterTargets="Build">
+        <Message Text="Running 'webpack'..." Importance="high" />
+        <Exec Command="npx webpack --mode production" WorkingDirectory="$(ProjectDir)" />
+    </Target>
+    
 </Project>
