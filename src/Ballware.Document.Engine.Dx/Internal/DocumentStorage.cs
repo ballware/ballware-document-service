@@ -72,7 +72,9 @@ public class DocumentStorage : ReportStorageWebExtension
     {
         if (!string.IsNullOrEmpty(url))
         {
-            var metaProvider = _serviceProvider.GetRequiredService<IDocumentMetadataProvider>();
+            using var scope = _serviceProvider.CreateScope();
+            
+            var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
 
             var tenantId = GetCurrentTenant();
 
@@ -143,8 +145,8 @@ public class DocumentStorage : ReportStorageWebExtension
             }
             else if ("new".Equals(url) && tenantId != null)
             {
-                var metaDatasourceProvider = _serviceProvider.GetRequiredService<IMetaDatasourceProvider>();
-                var tenantDatasourceProvider = _serviceProvider.GetRequiredService<ITenantDatasourceProvider>();
+                var metaDatasourceProvider = scope.ServiceProvider.GetRequiredService<IMetaDatasourceProvider>();
+                var tenantDatasourceProvider = scope.ServiceProvider.GetRequiredService<ITenantDatasourceProvider>();
 
                 XtraReport report = new XtraReport();
 
@@ -172,7 +174,9 @@ public class DocumentStorage : ReportStorageWebExtension
 
     public override void SetData(XtraReport report, string url)
     {
-        var metaProvider = _serviceProvider.GetRequiredService<IDocumentMetadataProvider>();
+        using var scope = _serviceProvider.CreateScope();
+        
+        var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
 
         var tenantId = GetCurrentTenant();
         var currentUser = GetCurrentUser();
@@ -203,7 +207,9 @@ public class DocumentStorage : ReportStorageWebExtension
 
     public override string SetNewData(XtraReport report, string defaultUrl)
     {
-        var metaProvider = _serviceProvider.GetRequiredService<IDocumentMetadataProvider>();
+        using var scope = _serviceProvider.CreateScope();
+        
+        var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
 
         var tenantId = GetCurrentTenant();
         var currentUser = GetCurrentUser();
@@ -232,7 +238,9 @@ public class DocumentStorage : ReportStorageWebExtension
 
     public override Dictionary<string, string> GetUrls()
     {
-        var metaProvider = _serviceProvider.GetRequiredService<IDocumentMetadataProvider>();
+        using var scope = _serviceProvider.CreateScope();
+        
+        var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
 
         var tenantId = GetCurrentTenant();
 
@@ -246,7 +254,7 @@ public class DocumentStorage : ReportStorageWebExtension
         throw new Exception("Tenant missing");
     }
 
-    private IDictionary<string, object> CreateDatasourcesFromDefinitions(IEnumerable<ReportDatasourceDefinition> definitions)
+    private static IDictionary<string, object> CreateDatasourcesFromDefinitions(IEnumerable<ReportDatasourceDefinition> definitions)
     {
         var dataSources = new Dictionary<string, object>();
 
@@ -292,7 +300,7 @@ public class DocumentStorage : ReportStorageWebExtension
         return dataSources;
     }
     
-    private string ExtractParameterDefinition(XtraReport report, IDocumentMetadataProvider metaProvider, Guid tenant, Guid user)
+    private static string ExtractParameterDefinition(XtraReport report, IDocumentMetadataProvider metaProvider, Guid tenant, Guid user)
     {
         using (var stream = new MemoryStream())
         using (var writer = new Utf8JsonWriter(stream))

@@ -1,20 +1,13 @@
 @page
-
-@model Ballware.Document.Engine.Dx.Pages.Viewer
-
-@{
-    Layout = null;
-}
-
 <!DOCTYPE html>
-
-<html>
+<html style="width:100%; height:100%">
 <head>
-    <title></title>
+    <title>DevExpress Report Viewer</title>
+    <link rel="stylesheet" href="~/dx/dist/viewer-script.bundle.css" />
 </head>
-<body>
-    <div>
-          
-    </div>
+<body style="width:100%; height:100%; margin:0;">
+<div style="width:100%; height: 100%" data-bind="dxReportViewer: viewerOptions">
+</div>
+<script src="~/dx/dist/viewer-script.bundle.js"></script>
 </body>
 </html>

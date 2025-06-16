@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "name": "ballware.document.engine.dx",
+  "private": true,
+  "dependencies": {
+    "@devexpress/analytics-core": "24.2-stable",
+    "bootstrap": "^4.3.1",
+    "devexpress-reporting": "24.2-stable",
+    "devextreme-dist": "24.2-stable",
+    "jquery": "^3.7.1",
+    "knockout": "^3.5.1"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "mini-css-extract-plugin": "^2.9.2",
+    "sass": "^1.89.2",
+    "sass-loader": "^16.0.5",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1",
+    "webpack-remove-empty-scripts": "^1.1.1"
+  }
+}

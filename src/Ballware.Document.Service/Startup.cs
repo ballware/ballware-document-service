@@ -2,7 +2,10 @@ using System.Globalization;
 using Ballware.Document.Authorization;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Jobs;
+using Ballware.Document.Metadata;
+using Ballware.Document.Service.Adapter;
 using Ballware.Document.Service.Configuration;
+using Ballware.Document.Service.Mappings;
 using Ballware.Generic.Client;
 using Ballware.Meta.Client;
 using Ballware.Storage.Client;
@@ -219,10 +222,17 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 #endif                        
             .AddClientCredentialsTokenHandler("generic");
         
-        Services.AddAutoMapper(config => {});
+        Services.AddAutoMapper(config =>
+        {
+            config.AddProfile<MetaServiceDocumentMetadataProfile>();
+            config.AddProfile<GenericServiceDocumentMetadataProfile>();
+        });
         
         Services.AddEndpointsApiExplorer();
 
+        Services.AddScoped<IDocumentMetadataProvider, MetaServiceDocumentMetadataProvider>();
+        Services.AddScoped<IMetaDatasourceProvider, MetaServiceDatasourceProvider>();
+        Services.AddScoped<ITenantDatasourceProvider, GenericServiceDatasourceProvider>();
         Services.AddBallwareDevExpressReporting();
         
         if (swaggerOptions != null)
@@ -307,6 +317,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.UseRouting();
 
         app.UseAuthorization();
+        app.UseStaticFiles();
         
         app.Use(async (context, next) =>
         {

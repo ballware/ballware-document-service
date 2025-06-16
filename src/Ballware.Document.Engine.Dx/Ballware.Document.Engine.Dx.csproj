@@ -6,6 +6,8 @@
         <Nullable>enable</Nullable>
         <RazorClassLibrary>true</RazorClassLibrary>
         <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+        <EnableDefaultEmbeddedStaticWebAssets>true</EnableDefaultEmbeddedStaticWebAssets>
+        <StaticWebAssetBasePath>dx</StaticWebAssetBasePath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,6 +26,20 @@
     <ItemGroup>
       <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
       <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\" />
+      <Folder Include="wwwroot\dist\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="package.json">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </Content>
+      <Content Update="package-lock.json">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
