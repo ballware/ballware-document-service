@@ -486,4 +486,4 @@ $RECYCLE.BIN/
 # Local app settings
 appsettings*.local.json
 
-wwwroot/dist/*
+**/wwwroot/dist/*
