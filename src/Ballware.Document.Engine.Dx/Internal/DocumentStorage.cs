@@ -3,12 +3,7 @@ using DevExpress.XtraReports.Parameters;
 using DevExpress.XtraReports.UI;
 using DevExpress.XtraReports.Web.Extensions;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -22,9 +17,9 @@ namespace Ballware.Document.Engine.Dx.Internal;
 
 public class DocumentStorage : ReportStorageWebExtension
 {
-    private readonly string GUID_CHECK_REGEX = @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
-    private readonly string PRINT_URL_CHECK_REGEX = @"\?docId=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:&id=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))+";
-    private readonly string PRINT_URL_FIND_IDS_REGEX = @"id=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})";
+    private static readonly string GuidCheckRegex = @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+    private static readonly string PrintUrlCheckRegex = @"\?docId=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:&id=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))+";
+    private static readonly string PrintUrlFindIdsRegex = @"id=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})";
 
     private readonly IServiceProvider _serviceProvider;
 
@@ -38,8 +33,13 @@ public class DocumentStorage : ReportStorageWebExtension
         var contextAccessor = _serviceProvider.GetRequiredService<IHttpContextAccessor>();
         var principalUtils = _serviceProvider.GetRequiredService<IPrincipalUtils>();
 
-        var user = contextAccessor.HttpContext.User;
+        var user = contextAccessor.HttpContext?.User;
 
+        if (user == null || user.Identity == null || !user.Identity.IsAuthenticated)
+        {
+            return null;
+        }
+        
         var userId = principalUtils.GetUserId(user);
         
         return userId;
@@ -50,7 +50,12 @@ public class DocumentStorage : ReportStorageWebExtension
         var contextAccessor = _serviceProvider.GetRequiredService<IHttpContextAccessor>();
         var principalUtils = _serviceProvider.GetRequiredService<IPrincipalUtils>();
 
-        var user = contextAccessor.HttpContext.User;
+        var user = contextAccessor.HttpContext?.User;
+        
+        if (user == null || user.Identity == null || !user.Identity.IsAuthenticated)
+        {
+            return null;
+        }
         
         var tenantId = principalUtils.GetUserTenandId(user);
 
@@ -70,106 +75,51 @@ public class DocumentStorage : ReportStorageWebExtension
 
     public override byte[] GetData(string url)
     {
-        if (!string.IsNullOrEmpty(url))
+        if (string.IsNullOrEmpty(url))
         {
-            using var scope = _serviceProvider.CreateScope();
-            
-            var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
+            return [];
+        }
+        
+        using var scope = _serviceProvider.CreateScope();
+        
+        var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
 
-            var tenantId = GetCurrentTenant();
+        var tenantId = GetCurrentTenant();
 
-            var matchPrintUrl = Regex.Match(url, PRINT_URL_CHECK_REGEX);
-            var matchGuid = Regex.Match(url, GUID_CHECK_REGEX);
+        var matchPrintUrl = Regex.Match(url, PrintUrlCheckRegex);
+        var matchGuid = Regex.Match(url, GuidCheckRegex);
 
-            if (matchPrintUrl.Success && tenantId != null)
+        if (matchPrintUrl.Success && tenantId != null)
+        {
+            var docId = matchPrintUrl.Groups[1].Value;
+            var ids = new List<Guid>();
+
+            var matchFindIds = Regex.Match(url, PrintUrlFindIdsRegex);
+
+            while (matchFindIds.Success)
             {
-                var docId = matchPrintUrl.Groups[1].Value;
-                var ids = new List<Guid>();
+                ids.Add(Guid.Parse(matchFindIds.Groups[1].Value));
 
-                var matchFindIds = Regex.Match(url, PRINT_URL_FIND_IDS_REGEX);
-
-                while (matchFindIds.Success)
-                {
-                    var bla = matchFindIds.Groups[1].Value;
-
-                    ids.Add(Guid.Parse(bla));
-
-                    matchFindIds = matchFindIds.NextMatch();
-                }
-
-                var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId.Value, Guid.Parse(docId));
-                
-                XtraReport report = new XtraReport();
-
-                using (var inputStream = new MemoryStream(reportBinary))
-                {
-                    report.LoadLayoutFromXml(inputStream);
-                }
-
-                if (report.Parameters["Ids"] != null)
-                {
-                    report.Parameters["Ids"].Value = ids.ToArray();
-                }
-
-                if (report.Parameters["TenantId"] != null)
-                {
-                    report.Parameters["TenantId"].Value = tenantId.Value;
-                }
-
-                report.RequestParameters = false;
-
-                using (var outputStream = new MemoryStream())
-                {
-                    report.SaveLayoutToXml(outputStream);
-
-                    return outputStream.ToArray();
-                }
+                matchFindIds = matchFindIds.NextMatch();
             }
-            else if (matchGuid.Success && tenantId != null)
-            {
-                var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId.Value, Guid.Parse(matchGuid.Groups[0].Value));
 
-                XtraReport report = new XtraReport();
+            return LoadPrintDocumentBinary(metaProvider, tenantId.Value, Guid.Parse(docId), ids);
+        }
+        
+        if (matchGuid.Success && tenantId != null)
+        {
+            return LoadSingleDocumentBinary(metaProvider, tenantId.Value, Guid.Parse(matchGuid.Groups[0].Value));
+        }
+         
+        if ("new".Equals(url) && tenantId != null)
+        {
+            var metaDatasourceProvider = scope.ServiceProvider.GetRequiredService<IMetaDatasourceProvider>();
+            var tenantDatasourceProvider = scope.ServiceProvider.GetRequiredService<ITenantDatasourceProvider>();
 
-                using (var inputStream = new MemoryStream(reportBinary))
-                {
-                    report.LoadLayoutFromXml(inputStream);
-                }
-
-                using (var outputStream = new MemoryStream())
-                {
-                    report.SaveLayoutToXml(outputStream);
-
-                    return outputStream.ToArray();
-                }
-            }
-            else if ("new".Equals(url) && tenantId != null)
-            {
-                var metaDatasourceProvider = scope.ServiceProvider.GetRequiredService<IMetaDatasourceProvider>();
-                var tenantDatasourceProvider = scope.ServiceProvider.GetRequiredService<ITenantDatasourceProvider>();
-
-                XtraReport report = new XtraReport();
-
-                report.Parameters.Add(new Parameter() { Name = "Ids", Type = typeof(Guid), MultiValue = true, AllowNull = true, Visible = false });
-                report.Parameters.Add(new Parameter() { Name = "TenantId", Type = typeof(Guid), Visible = false, Value = GetCurrentTenant() });
-
-                var metaDatasourceDefinitions = metaDatasourceProvider.DatasourceDefinitionsForTenant(tenantId.Value);
-                var tenantDatasourceDefinitions = tenantDatasourceProvider.DatasourceDefinitionsForTenant(tenantId.Value);
-
-                var datasources = CreateDatasourcesFromDefinitions(metaDatasourceDefinitions.Concat(tenantDatasourceDefinitions));
-                
-                DataSourceManager.AddDataSources(report, datasources.Select(d => (IComponent)d.Value).ToArray());
-
-                using (var outputStream = new MemoryStream())
-                {
-                    report.SaveLayoutToXml(outputStream);
-
-                    return outputStream.ToArray();
-                }
-            }
+            return LoadNewDocumentBinary(metaDatasourceProvider, tenantDatasourceProvider, tenantId.Value);
         }
 
-        return new byte[] { };
+        return [];
     }
 
     public override void SetData(XtraReport report, string url)
@@ -181,7 +131,7 @@ public class DocumentStorage : ReportStorageWebExtension
         var tenantId = GetCurrentTenant();
         var currentUser = GetCurrentUser();
 
-        var matchGuid = Regex.Match(url, GUID_CHECK_REGEX);
+        var matchGuid = Regex.Match(url, GuidCheckRegex);
 
         if (tenantId != null && currentUser != null && matchGuid.Success)
         {
@@ -233,7 +183,7 @@ public class DocumentStorage : ReportStorageWebExtension
             return id.ToString();
         }
 
-        throw new Exception("User or tenant missing");
+        throw new ArgumentException("User or tenant missing");
     }
 
     public override Dictionary<string, string> GetUrls()
@@ -251,45 +201,33 @@ public class DocumentStorage : ReportStorageWebExtension
             return documents.ToDictionary(d => $"{d.Id}", d => d.DisplayName);
         }
 
-        throw new Exception("Tenant missing");
+        throw new ArgumentException("Tenant missing");
     }
 
     private static IDictionary<string, object> CreateDatasourcesFromDefinitions(IEnumerable<ReportDatasourceDefinition> definitions)
     {
         var dataSources = new Dictionary<string, object>();
 
-        foreach (var schemaDefinition in definitions)
+        foreach (var schemaDefinition in definitions
+                     .Where(definition => !string.IsNullOrEmpty(definition.ConnectionString) 
+                                          && !string.IsNullOrEmpty(definition.Name)))
         {
             var datasource = new SqlDataSource(new CustomStringConnectionParameters(schemaDefinition.ConnectionString))
             {
                 Name = schemaDefinition.Name
             };
 
-            foreach (var table in schemaDefinition.Tables)
+            foreach (var table in schemaDefinition.Tables ?? [])
             {
-                if (!string.IsNullOrEmpty(table.Name) && !string.IsNullOrEmpty(table.Query))
+                var datasourceQuery = new CustomSqlQuery(table.Name, table.Query);
+
+                datasource.Queries.Add(datasourceQuery);
+
+                if (string.IsNullOrEmpty(table.Name) || table.Relations == null) continue;
+                
+                foreach (var relation in table.Relations)
                 {
-                    var datasourceQuery = new CustomSqlQuery(table.Name, table.Query);
-
-                    datasource.Queries.Add(datasourceQuery);
-
-                    if (table.Relations != null)
-                    {
-                        foreach (var relation in table.Relations)
-                        {
-                            var masterColumns = relation.MasterColumn.Split(',');
-                            var childColumns = relation.ChildColumn.Split(',');
-
-                            var relationColumns = masterColumns.Zip(childColumns, (master, child) => new RelationColumnInfo(master, child));
-
-                            var datasourceRelation = new MasterDetailInfo(table.Name, relation.ChildTable, relationColumns)
-                            {
-                                Name = relation.Name
-                            };
-
-                            datasource.Relations.Add(datasourceRelation);
-                        }
-                    }
+                    datasource.Relations.Add(CreateMasterDetailInfoFromRelation(table.Name, relation));
                 }
             }
 
@@ -298,6 +236,23 @@ public class DocumentStorage : ReportStorageWebExtension
         }
 
         return dataSources;
+    }
+
+    private static MasterDetailInfo CreateMasterDetailInfoFromRelation(string tableName, ReportDatasourceRelation relation)
+    {
+        var masterColumns = relation.MasterColumn?.Split(',') ?? [];
+        var childColumns = relation.ChildColumn?.Split(',') ?? [];
+
+        var relationColumns = masterColumns.Zip(childColumns,
+            (master, child) => new RelationColumnInfo(master, child));
+
+        var datasourceRelation =
+            new MasterDetailInfo(tableName, relation.ChildTable, relationColumns)
+            {
+                Name = relation.Name
+            };
+
+        return datasourceRelation;
     }
     
     private static string ExtractParameterDefinition(XtraReport report, IDocumentMetadataProvider metaProvider, Guid tenant, Guid user)
@@ -339,5 +294,78 @@ public class DocumentStorage : ReportStorageWebExtension
 
             return Encoding.UTF8.GetString(stream.ToArray());
         }
+    }
+
+    private static byte[] LoadPrintDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId, IEnumerable<Guid> ids)
+    {
+       var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId, documentId);
+        
+        XtraReport report = new XtraReport();
+
+        using (var inputStream = new MemoryStream(reportBinary))
+        {
+            report.LoadLayoutFromXml(inputStream);
+        }
+
+        if (report.Parameters["Ids"] != null)
+        {
+            report.Parameters["Ids"].Value = ids.ToArray();
+        }
+
+        if (report.Parameters["TenantId"] != null)
+        {
+            report.Parameters["TenantId"].Value = tenantId;
+        }
+
+        report.RequestParameters = false;
+
+        using (var outputStream = new MemoryStream())
+        {
+            report.SaveLayoutToXml(outputStream);
+
+            return outputStream.ToArray();
+        }
+    }
+
+    private static byte[] LoadSingleDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId)
+    {
+        var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId, documentId);
+
+        XtraReport report = new XtraReport();
+
+        using (var inputStream = new MemoryStream(reportBinary))
+        {
+            report.LoadLayoutFromXml(inputStream);
+        }
+
+        using var outputStream = new MemoryStream();
+
+        report.SaveLayoutToXml(outputStream);
+
+        return outputStream.ToArray();
+    }
+
+    private static byte[] LoadNewDocumentBinary(IMetaDatasourceProvider metaDatasourceProvider,
+        ITenantDatasourceProvider tenantDatasourceProvider, Guid tenantId)
+    {
+        XtraReport report = new XtraReport();
+
+        report.Parameters.Add(new Parameter()
+            { Name = "Ids", Type = typeof(Guid), MultiValue = true, AllowNull = true, Visible = false });
+        report.Parameters.Add(new Parameter()
+            { Name = "TenantId", Type = typeof(Guid), Visible = false, Value = tenantId });
+
+        var metaDatasourceDefinitions = metaDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
+        var tenantDatasourceDefinitions = tenantDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
+
+        var datasources =
+            CreateDatasourcesFromDefinitions(metaDatasourceDefinitions.Concat(tenantDatasourceDefinitions));
+
+        DataSourceManager.AddDataSources(report, datasources.Select(d => (IComponent)d.Value).ToArray());
+
+        using var outputStream = new MemoryStream();
+        report.SaveLayoutToXml(outputStream);
+
+        return outputStream.ToArray();
     }
 }

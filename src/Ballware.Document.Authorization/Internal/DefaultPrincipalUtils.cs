@@ -19,7 +19,10 @@ class DefaultPrincipalUtils : IPrincipalUtils
     {
         var userIdClaimValue = principal.Claims.FirstOrDefault(c => c.Type.Equals(UserIdClaim));
 
-        Guid.TryParse(userIdClaimValue?.Value, out var userId);
+        if (!Guid.TryParse(userIdClaimValue?.Value, out var userId))
+        {
+            throw new InvalidOperationException($"User ID claim '{UserIdClaim}' is not present or invalid.");
+        }
 
         return userId;
     }
@@ -28,7 +31,10 @@ class DefaultPrincipalUtils : IPrincipalUtils
     {
         var tenantClaimValue = principal.Claims.FirstOrDefault(c => c.Type.Equals(TenantClaim));
 
-        Guid.TryParse(tenantClaimValue?.Value, out var tenantId);
+        if (!Guid.TryParse(tenantClaimValue?.Value, out var tenantId)) 
+        {
+            throw new InvalidOperationException($"Tenant ID claim '{TenantClaim}' is not present or invalid.");
+        }
 
         return tenantId;
     }
@@ -39,9 +45,9 @@ class DefaultPrincipalUtils : IPrincipalUtils
 
         foreach (var cl in principal.Claims)
         {
-            if (userinfoTemp.ContainsKey(cl.Type))
+            if (userinfoTemp.TryGetValue(cl.Type, out var existingList))
             {
-                userinfoTemp[cl.Type].Add(cl.Value);
+                existingList.Add(cl.Value);
             }
             else
             {
