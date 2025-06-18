@@ -41,6 +41,7 @@
       <ProjectReference Include="..\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj" />
       <ProjectReference Include="..\Ballware.Document.Jobs\Ballware.Document.Jobs.csproj" />
       <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Session\Ballware.Document.Session.csproj" />
       <ProjectReference Include="..\Ballware.Generic.Client\Ballware.Generic.Client.csproj" />
       <ProjectReference Include="..\Ballware.Meta.Client\Ballware.Meta.Client.csproj" />
       <ProjectReference Include="..\Ballware.Storage.Client\Ballware.Storage.Client.csproj" />

@@ -6,6 +6,7 @@ using Ballware.Document.Metadata;
 using Ballware.Document.Service.Adapter;
 using Ballware.Document.Service.Configuration;
 using Ballware.Document.Service.Mappings;
+using Ballware.Document.Session;
 using Ballware.Generic.Client;
 using Ballware.Meta.Client;
 using Ballware.Storage.Client;
@@ -25,6 +26,7 @@ using Quartz;
 using CorsOptions = Ballware.Document.Service.Configuration.CorsOptions;
 using SwaggerOptions = Ballware.Document.Service.Configuration.SwaggerOptions;
 using Serilog;
+using SessionOptions = Ballware.Document.Session.Configuration.SessionOptions;
 
 namespace Ballware.Document.Service;
 
@@ -39,6 +41,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         CorsOptions? corsOptions = Configuration.GetSection("Cors").Get<CorsOptions>();
         AuthorizationOptions? authorizationOptions =
             Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
+        SessionOptions? sessionOptions = Configuration.GetSection("Session").Get<SessionOptions>();
         SwaggerOptions? swaggerOptions = Configuration.GetSection("Swagger").Get<SwaggerOptions>();
         ServiceClientOptions? metaClientOptions = Configuration.GetSection("MetaClient").Get<ServiceClientOptions>();
         ServiceClientOptions? storageClientOptions = Configuration.GetSection("StorageClient").Get<ServiceClientOptions>();
@@ -46,6 +49,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddOptionsWithValidateOnStart<AuthorizationOptions>()
             .Bind(Configuration.GetSection("Authorization"))
+            .ValidateDataAnnotations();
+        
+        Services.AddOptionsWithValidateOnStart<SessionOptions>()
+            .Bind(Configuration.GetSection("Session"))
             .ValidateDataAnnotations();
         
         Services.AddOptionsWithValidateOnStart<SwaggerOptions>()
@@ -67,6 +74,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         if (authorizationOptions == null)
         {
             throw new ConfigurationException("Required configuration for authorization is missing");
+        }
+        
+        if (sessionOptions == null)
+        {
+            sessionOptions = new SessionOptions();
         }
         
         if (metaClientOptions == null)
@@ -93,28 +105,22 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddDistributedMemoryCache();
         
         Services.AddAuthentication(options =>
-        {
-            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-        })
-            .AddCookie(options =>
             {
-                options.Cookie.Name = "BallwareAuthCookie";
-                options.CookieManager = new ChunkingCookieManager()
-                {
-                    ChunkSize = 4096
-                };
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             })
+            .AddCookie()
             .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
                 options.Authority = authorizationOptions.Authority;
                 options.ClientId = authorizationOptions.ClientId;
                 options.ClientSecret = null;
                 options.ResponseType = "code";
-                options.GetClaimsFromUserInfoEndpoint = true;
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
                 options.Scope.Add(authorizationOptions.RequiredUserScope);
+                
+                options.RegisterBallwareSessionTokenHandling();
             })
             .AddJwtBearer(options =>
             {
@@ -151,6 +157,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             options.SerializerOptions.PropertyNamingPolicy = null;
         });
 
+        Services.AddBallwareSession(sessionOptions);
         Services.AddBallwareDocumentAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
         
         Services.AddHttpContextAccessor();
@@ -322,6 +329,9 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         app.UseRouting();
 
+        app.UseBallwareSession();
+        
+        app.UseAuthentication();
         app.UseAuthorization();
         app.UseStaticFiles();
         

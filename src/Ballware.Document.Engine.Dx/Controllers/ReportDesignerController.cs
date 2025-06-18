@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Ballware.Document.Engine.Dx.Controllers;
 
 [Route("api/ReportDesigner")]
-[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "DistributedSession")]
 public class ReportDesignerController : DevExpress.AspNetCore.Reporting.ReportDesigner.ReportDesignerController
 {
     private IReportDesignerModelBuilder ModelBuilder { get; }

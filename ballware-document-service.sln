@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Metadata"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Authorization.Tests", "test\Ballware.Document.Authorization.Tests\Ballware.Document.Authorization.Tests.csproj", "{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Session", "src\Ballware.Document.Session\Ballware.Document.Session.csproj", "{35429131-7290-41D0-A601-F0A55C20A928}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +62,9 @@ Global
 		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35429131-7290-41D0-A601-F0A55C20A928}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35429131-7290-41D0-A601-F0A55C20A928}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35429131-7290-41D0-A601-F0A55C20A928}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35429131-7290-41D0-A601-F0A55C20A928}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

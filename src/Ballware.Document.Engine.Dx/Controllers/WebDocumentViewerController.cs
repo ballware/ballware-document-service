@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Ballware.Document.Engine.Dx.Controllers;
 
 [Route("api/DocumentViewer")]
-[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "DistributedSession")]
 public class WebDocumentViewerController : DevExpress.AspNetCore.Reporting.WebDocumentViewer.WebDocumentViewerController
 {
     public WebDocumentViewerController(IWebDocumentViewerMvcControllerService controllerService) : base(
