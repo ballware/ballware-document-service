@@ -9,7 +9,11 @@ using Ballware.Document.Service.Mappings;
 using Ballware.Generic.Client;
 using Ballware.Meta.Client;
 using Ballware.Storage.Client;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -26,8 +30,6 @@ namespace Ballware.Document.Service;
 
 public class Startup(IWebHostEnvironment environment, ConfigurationManager configuration, IServiceCollection services)
 {
-    private readonly string ClaimTypeScope = "scope";
-    
     private IWebHostEnvironment Environment { get; } = environment;
     private ConfigurationManager Configuration { get; } = configuration;
     private IServiceCollection Services { get; } = services;
@@ -92,35 +94,39 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddAuthentication(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
-        {
-            options.MapInboundClaims = false;
-            options.Authority = authorizationOptions.Authority;
-            options.Audience = authorizationOptions.Audience;
-            options.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
-            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        })
+            .AddCookie(options =>
             {
-                ValidIssuer = authorizationOptions.Authority
-            };
-        });
-
-        Services.AddAuthorizationBuilder()
-            .AddPolicy("documentApi", policy => policy.RequireAssertion(context =>
-                context.User
-                    .Claims
-                    .Where(c => ClaimTypeScope == c.Type)
-                    .SelectMany(c => c.Value.Split(' '))
-                    .Any(s => s.Equals(authorizationOptions.RequiredMetaScope, StringComparison.Ordinal)))
-            )
-            .AddPolicy("serviceApi", policy => policy.RequireAssertion(context =>
-                context.User
-                    .Claims
-                    .Where(c => ClaimTypeScope == c.Type)
-                    .SelectMany(c => c.Value.Split(' '))
-                    .Any(s => s.Equals(authorizationOptions.RequiredServiceScope, StringComparison.Ordinal)))
-            );
+                options.Cookie.Name = "BallwareAuthCookie";
+                options.CookieManager = new ChunkingCookieManager()
+                {
+                    ChunkSize = 4096
+                };
+            })
+            .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+            {
+                options.Authority = authorizationOptions.Authority;
+                options.ClientId = authorizationOptions.ClientId;
+                options.ClientSecret = null;
+                options.ResponseType = "code";
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.Scope.Add(authorizationOptions.RequiredUserScope);
+            })
+            .AddJwtBearer(options =>
+            {
+                options.MapInboundClaims = false;
+                options.Authority = authorizationOptions.Authority;
+                options.Audience = authorizationOptions.Audience;
+                options.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
+                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                {
+                    ValidIssuer = authorizationOptions.Authority
+                };
+            });
 
         if (corsOptions != null)
         {

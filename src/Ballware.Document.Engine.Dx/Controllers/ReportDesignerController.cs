@@ -1,10 +1,13 @@
 using DevExpress.AspNetCore.Reporting.ReportDesigner.Native.Services;
 using DevExpress.XtraReports.Web.ReportDesigner.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ballware.Document.Engine.Dx.Controllers;
 
 [Route("api/ReportDesigner")]
+[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
 public class ReportDesignerController : DevExpress.AspNetCore.Reporting.ReportDesigner.ReportDesignerController
 {
     private IReportDesignerModelBuilder ModelBuilder { get; }

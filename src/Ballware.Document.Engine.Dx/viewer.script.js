@@ -7,24 +7,15 @@ import '@devexpress/analytics-core/dist/css/dx-analytics.light.compact.css';
 import 'devexpress-reporting/dist/css/dx-webdocumentviewer.css';
 
 import 'devexpress-reporting/dx-webdocumentviewer';
-
-import { fetchSetup } from '@devexpress/analytics-core/analytics-utils';
+import 'devexpress-reporting/dx-reportdesigner';
 
 var urlSearchParams = new URLSearchParams(window.location.search);
-/*
-fetchSetup.fetchSettings = {
-    headers: { 'Authorization': 'Bearer ' + urlSearchParams.get('token') }
-};
-
-urlSearchParams.delete('token');
-*/
 
 var viewModel = {
     viewerOptions: {
-        fetchSetup: fetchSetup,
         reportUrl: decodeURIComponent(urlSearchParams.toString()), // The URL of a report that is opened in the Report Designer when the application starts.
         requestOptions: { // Options for processing requests from the Report Designer. 
-            invokeAction: 'DocumentViewer'
+            invokeAction: 'api/DocumentViewer'
         },
         callbacks: {
             CustomizeLocalization: function (s, e) {

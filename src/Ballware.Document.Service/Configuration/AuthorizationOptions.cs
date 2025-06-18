@@ -10,7 +10,10 @@ public class AuthorizationOptions
 
     [Required]
     public required string Audience { get; set; }
-
+    
+    [Required]
+    public required string ClientId { get; set; }
+    
     [Required]
     public required string TenantClaim { get; set; } = "tenant";
 
@@ -21,6 +24,7 @@ public class AuthorizationOptions
     public required string RightClaim { get; set; } = "right";
 
     public bool RequireHttpsMetadata { get; set; } = true;
-    public string RequiredMetaScope { get; set; } = "documentApi";
-    public string RequiredServiceScope { get; set; } = "serviceApi";
+    
+    [Required]
+    public required string RequiredUserScope { get; set; } = "documentApi";
 }

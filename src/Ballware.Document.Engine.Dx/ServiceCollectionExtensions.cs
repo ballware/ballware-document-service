@@ -1,8 +1,6 @@
 using Ballware.Document.Engine.Dx.Internal;
-using Ballware.Document.Engine.Dx.Pages;
 using DevExpress.AspNetCore;
 using DevExpress.AspNetCore.Reporting;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ballware.Document.Engine.Dx;
@@ -20,7 +18,13 @@ public static class ServiceCollectionExtensions
         
         services.ConfigureReportingServices(builder =>
         {
-            builder.UseDevelopmentMode();
+            builder.UseDevelopmentMode(options =>
+            {
+                options.Enabled = true;
+                options.EnableClientSideDevelopmentMode = true;
+                options.CheckClientLibraryVersions = true;
+            });
+            
             builder.ConfigureReportDesigner(designerConfigurator =>
             {
                 designerConfigurator.EnableCustomSql();
