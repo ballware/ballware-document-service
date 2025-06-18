@@ -7,7 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace Ballware.Document.Session.Internal;
 
-class SessionPrincipalProvider
+class SessionPrincipalProvider : ISessionPrincipalProvider
 {
     private IDistributedCache Cache { get; }
     private IDataProtectionProvider DataProtectionProvider { get; }
@@ -38,7 +38,7 @@ class SessionPrincipalProvider
         return null;
     }
     
-    public async Task StorePrincipalAsync(HttpContext context, ClaimsPrincipal principal, string? path)
+    public async Task StorePrincipalAsync(HttpContext context, ClaimsPrincipal principal)
     {
         var sessionId = Guid.NewGuid().ToString();
 

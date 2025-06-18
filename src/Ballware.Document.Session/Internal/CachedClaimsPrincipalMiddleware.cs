@@ -7,10 +7,10 @@ class CachedClaimsPrincipalMiddleware
 {
     private readonly RequestDelegate _next;
     
-    private SessionPrincipalProvider SessionPrincipalProvider { get; }
+    private ISessionPrincipalProvider SessionPrincipalProvider { get; }
     private SessionOptions Options { get; }
 
-    public CachedClaimsPrincipalMiddleware(RequestDelegate next, SessionPrincipalProvider provider, SessionOptions options)
+    public CachedClaimsPrincipalMiddleware(RequestDelegate next, ISessionPrincipalProvider provider, SessionOptions options)
     {
         _next = next;
         SessionPrincipalProvider = provider;

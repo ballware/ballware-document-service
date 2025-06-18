@@ -21,7 +21,7 @@ public static class OpenIdConnectOptionsExtensions
                 var sessionProvider = httpContext.RequestServices.GetRequiredService<SessionPrincipalProvider>();
 
                 var principal = context.Principal!;
-                await sessionProvider.StorePrincipalAsync(httpContext, principal, context.Properties?.RedirectUri);
+                await sessionProvider.StorePrincipalAsync(httpContext, principal);
 
                 if (sessionOptions.SuppressDefaultSessionCookie)
                 {

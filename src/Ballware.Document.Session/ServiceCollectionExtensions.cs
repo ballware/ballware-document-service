@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSession();
         services.AddSingleton(options);
-        services.AddSingleton<SessionPrincipalProvider>();
+        services.AddSingleton<ISessionPrincipalProvider, SessionPrincipalProvider>();
         services.AddAuthentication("DistributedSession")
             .AddScheme<AuthenticationSchemeOptions, SessionPrincipalAuthenticationHandler>("DistributedSession", null);
         

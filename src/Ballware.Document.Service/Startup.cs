@@ -5,6 +5,7 @@ using Ballware.Document.Jobs;
 using Ballware.Document.Metadata;
 using Ballware.Document.Service.Adapter;
 using Ballware.Document.Service.Configuration;
+using Ballware.Document.Service.Endpoints;
 using Ballware.Document.Service.Mappings;
 using Ballware.Document.Session;
 using Ballware.Generic.Client;
@@ -21,6 +22,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using CorsOptions = Ballware.Document.Service.Configuration.CorsOptions;
@@ -134,6 +137,16 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 };
             });
 
+        Services.AddSingleton<ConfigurationManager<OpenIdConnectConfiguration>>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+                .Get(OpenIdConnectDefaults.AuthenticationScheme);
+
+            return new ConfigurationManager<OpenIdConnectConfiguration>(
+                options.Authority!.TrimEnd('/') + "/.well-known/openid-configuration",
+                new OpenIdConnectConfigurationRetriever());
+        });
+        
         if (corsOptions != null)
         {
             Services.AddCors(options =>
@@ -346,6 +359,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         app.MapControllers();
         app.MapRazorPages();
+        app.MapSignOnEndpoint();
         
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;
