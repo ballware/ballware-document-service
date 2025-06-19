@@ -9,8 +9,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Ballware.Document.Authorization;
 using Ballware.Document.Metadata;
-using DevExpress.DataAccess.ConnectionParameters;
-using DevExpress.DataAccess.Sql;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ballware.Document.Engine.Dx.Internal;
@@ -113,10 +111,9 @@ public class DocumentStorage : ReportStorageWebExtension
          
         if ("new".Equals(url) && tenantId != null)
         {
-            var metaDatasourceProvider = scope.ServiceProvider.GetRequiredService<IMetaDatasourceProvider>();
-            var tenantDatasourceProvider = scope.ServiceProvider.GetRequiredService<ITenantDatasourceProvider>();
+            var datasourceProvider = scope.ServiceProvider.GetRequiredService<IDocumentDatasourceProvider>();
 
-            return LoadNewDocumentBinary(metaDatasourceProvider, tenantDatasourceProvider, tenantId.Value);
+            return LoadNewDocumentBinary(datasourceProvider, tenantId.Value);
         }
 
         return [];
@@ -204,57 +201,6 @@ public class DocumentStorage : ReportStorageWebExtension
         throw new ArgumentException("Tenant missing");
     }
 
-    private static IDictionary<string, object> CreateDatasourcesFromDefinitions(IEnumerable<ReportDatasourceDefinition> definitions)
-    {
-        var dataSources = new Dictionary<string, object>();
-
-        foreach (var schemaDefinition in definitions
-                     .Where(definition => !string.IsNullOrEmpty(definition.ConnectionString) 
-                                          && !string.IsNullOrEmpty(definition.Name)))
-        {
-            var datasource = new SqlDataSource(new CustomStringConnectionParameters(schemaDefinition.ConnectionString))
-            {
-                Name = schemaDefinition.Name
-            };
-
-            foreach (var table in schemaDefinition.Tables ?? [])
-            {
-                var datasourceQuery = new CustomSqlQuery(table.Name, table.Query);
-
-                datasource.Queries.Add(datasourceQuery);
-
-                if (string.IsNullOrEmpty(table.Name) || table.Relations == null) continue;
-                
-                foreach (var relation in table.Relations)
-                {
-                    datasource.Relations.Add(CreateMasterDetailInfoFromRelation(table.Name, relation));
-                }
-            }
-
-            datasource.RebuildResultSchema();
-            dataSources.Add(schemaDefinition.Name, datasource);
-        }
-
-        return dataSources;
-    }
-
-    private static MasterDetailInfo CreateMasterDetailInfoFromRelation(string tableName, ReportDatasourceRelation relation)
-    {
-        var masterColumns = relation.MasterColumn?.Split(',') ?? [];
-        var childColumns = relation.ChildColumn?.Split(',') ?? [];
-
-        var relationColumns = masterColumns.Zip(childColumns,
-            (master, child) => new RelationColumnInfo(master, child));
-
-        var datasourceRelation =
-            new MasterDetailInfo(tableName, relation.ChildTable, relationColumns)
-            {
-                Name = relation.Name
-            };
-
-        return datasourceRelation;
-    }
-    
     private static string ExtractParameterDefinition(XtraReport report, IDocumentMetadataProvider metaProvider, Guid tenant, Guid user)
     {
         using (var stream = new MemoryStream())
@@ -345,8 +291,7 @@ public class DocumentStorage : ReportStorageWebExtension
         return outputStream.ToArray();
     }
 
-    private static byte[] LoadNewDocumentBinary(IMetaDatasourceProvider metaDatasourceProvider,
-        ITenantDatasourceProvider tenantDatasourceProvider, Guid tenantId)
+    private static byte[] LoadNewDocumentBinary(IDocumentDatasourceProvider datasourceProvider, Guid tenantId)
     {
         XtraReport report = new XtraReport();
 
@@ -354,12 +299,8 @@ public class DocumentStorage : ReportStorageWebExtension
             { Name = "Ids", Type = typeof(Guid), MultiValue = true, AllowNull = true, Visible = false });
         report.Parameters.Add(new Parameter()
             { Name = "TenantId", Type = typeof(Guid), Visible = false, Value = tenantId });
-
-        var metaDatasourceDefinitions = metaDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
-        var tenantDatasourceDefinitions = tenantDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
-
-        var datasources =
-            CreateDatasourcesFromDefinitions(metaDatasourceDefinitions.Concat(tenantDatasourceDefinitions));
+        
+        var datasources = datasourceProvider.CreateDatasourcesForTenant(tenantId);
 
         DataSourceManager.AddDataSources(report, datasources.Select(d => (IComponent)d.Value).ToArray());
 

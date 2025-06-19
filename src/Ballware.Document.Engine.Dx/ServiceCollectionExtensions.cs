@@ -8,12 +8,13 @@ namespace Ballware.Document.Engine.Dx;
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddBallwareDevExpressReporting(this IServiceCollection services)
-    {
+    {   
         services.AddSingleton<LoggerService>();
         services.AddSingleton<DocumentStorage>();
         services.AddSingleton<FetchNameByIdFromLookup>();
         services.AddSingleton<FetchNameByStateFromProcessingState>();
         services.AddSingleton<FetchTextByValueFromPickvalue>();
+        services.AddScoped<IDocumentDatasourceProvider, DocumentDatasourceProvider>();
         services.AddDevExpressControls();
         
         services.ConfigureReportingServices(builder =>
