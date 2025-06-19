@@ -216,11 +216,14 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             {
                 client.BaseAddress = new Uri(metaClientOptions.ServiceUrl);
             })
-#if DEBUG            
+#if DEBUG     
+// SonarQube: Disable S4830 - Accepting any server certificate is intended here for debug purposes
+#pragma warning disable S4830      
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             })
+#pragma warning restore S4830            
 #endif                  
             .AddClientCredentialsTokenHandler("meta");
 
@@ -228,11 +231,16 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             {
                 client.BaseAddress = new Uri(storageClientOptions.ServiceUrl);
             })
-#if DEBUG            
+#if DEBUG     
+// SonarQube: Disable S4830 - Accepting any server certificate is intended here for debug purposes
+#pragma warning disable S4830
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
             {
+                // SonarQube: Disable S4830 - Accepting any server certificate is intended here
+
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             })
+#pragma warning restore S4830            
 #endif            
             .AddClientCredentialsTokenHandler("storage");
         
@@ -240,11 +248,14 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             {
                 client.BaseAddress = new Uri(genericClientOptions.ServiceUrl);
             })
-#if DEBUG            
+#if DEBUG     
+// SonarQube: Disable S4830 - Accepting any server certificate is intended here for debug purposes
+#pragma warning disable S4830
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             })
+#pragma warning restore S4830             
 #endif                        
             .AddClientCredentialsTokenHandler("generic");
         
@@ -257,7 +268,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddEndpointsApiExplorer();
 
         Services.AddScoped<IDocumentMetadataProvider, MetaServiceDocumentMetadataProvider>();
+        Services.AddScoped<IDocumentProcessingStateProvider, MetaServiceProcessingStateProvider>();
+        Services.AddScoped<IDocumentPickvalueProvider, MetaServicePickvalueProvider>();
         Services.AddScoped<IMetaDatasourceProvider, MetaServiceDatasourceProvider>();
+        Services.AddScoped<IDocumentLookupProvider, GenericServiceLookupProvider>();
         Services.AddScoped<ITenantDatasourceProvider, GenericServiceDatasourceProvider>();
         Services.AddBallwareDevExpressReporting();
         

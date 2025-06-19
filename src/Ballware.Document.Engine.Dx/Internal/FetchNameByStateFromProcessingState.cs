@@ -25,7 +25,9 @@ public class FetchNameByStateFromProcessingState : ICustomFunctionOperatorBrowsa
 
     public object Evaluate(params object[] operands)
     {
-        var stateProvider = ServiceProvider.GetRequiredService<IDocumentProcessingStateProvider>();
+        using var scope = ServiceProvider.CreateScope();
+        
+        var stateProvider = scope.ServiceProvider.GetRequiredService<IDocumentProcessingStateProvider>();
 
         var tenantId = (Guid)operands[0];
         var entity = operands[1] as string;

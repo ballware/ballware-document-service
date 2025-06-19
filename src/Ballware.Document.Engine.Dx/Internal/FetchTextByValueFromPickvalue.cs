@@ -25,7 +25,9 @@ public class FetchTextByValueFromPickvalue : ICustomFunctionOperatorBrowsable
 
     public object Evaluate(params object[] operands)
     {
-        var pickvalueProvider = ServiceProvider.GetRequiredService<IDocumentPickvalueProvider>();
+        using var scope = ServiceProvider.CreateScope();
+        
+        var pickvalueProvider = scope.ServiceProvider.GetRequiredService<IDocumentPickvalueProvider>();
 
         var tenantId = (Guid)operands[0];
         var entity = operands[1] as string;

@@ -25,7 +25,9 @@ public class FetchNameByIdFromLookup : ICustomFunctionOperatorBrowsable
 
     public object Evaluate(params object[] operands)
     {
-        var lookupProvider = ServiceProvider.GetRequiredService<IDocumentLookupProvider>();
+        using var scope = ServiceProvider.CreateScope();
+        
+        var lookupProvider = scope.ServiceProvider.GetRequiredService<IDocumentLookupProvider>();
 
         var tenantId = (Guid)operands[0];
         var lookupId = Guid.Parse(operands[1] as string);
