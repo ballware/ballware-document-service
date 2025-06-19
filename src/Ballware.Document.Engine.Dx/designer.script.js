@@ -15,10 +15,11 @@ import 'devexpress-reporting/dx-webdocumentviewer';
 import 'devexpress-reporting/dx-reportdesigner';
 
 var urlSearchParams = new URLSearchParams(window.location.search);
+var reportUrl = urlSearchParams.has('id') ? urlSearchParams.get('id') : 'new';
 
 var viewModel = {
     designerOptions: {
-        reportUrl: 'new', //reportUrl, // The URL of a report that is opened in the Report Designer when the application starts.
+        reportUrl: reportUrl, // The URL of a report that is opened in the Report Designer when the application starts.
         requestOptions: { // Options for processing requests from the Report Designer. 
             getDesignerModelAction: "/api/ReportDesigner/GetReportDesignerModel" // Action that returns the Report Designer model.
         },

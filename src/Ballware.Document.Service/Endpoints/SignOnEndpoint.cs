@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Ballware.Document.Service.Configuration;
 using Ballware.Document.Session;
 using Microsoft.Extensions.Options;
@@ -27,21 +28,24 @@ public static class SignOnEndpoint
             ValidIssuer = options.Value.Authority,
             ValidAudience = options.Value.ClientId,
             IssuerSigningKeys = config.SigningKeys,
-            ValidateLifetime = true
+            ValidateLifetime = true,
         };
 
-        try
-        {
-            var principal = handler.ValidateToken(idToken, validationParameters, out _);
+        var token = handler.ReadJwtToken(idToken);
+        
+        var result = await handler.ValidateTokenAsync(idToken, validationParameters);
 
-            await principalProvider.StorePrincipalAsync(context, principal);
-            
-            return Results.Redirect(redirect);
-        }
-        catch (Exception ex)
+        if (result.IsValid)
         {
-            return Results.Unauthorized();
+            var identity = new ClaimsIdentity(token.Claims, "Bearer");
+            var principal = new ClaimsPrincipal(identity);
+        
+            await principalProvider.StorePrincipalAsync(context, principal);
+        
+            return Results.Redirect(redirect);    
         }
+        
+        return Results.Unauthorized();
     }
 
 }
