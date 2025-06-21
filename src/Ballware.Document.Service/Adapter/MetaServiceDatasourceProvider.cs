@@ -19,4 +19,9 @@ public class MetaServiceDatasourceProvider : IMetaDatasourceProvider
     {
         return Mapper.Map<IEnumerable<ReportDatasourceDefinition>>(MetaClient.TenantReportMetaDatasources(tenantId));
     }
+
+    public IDictionary<string, object> LookupMetadataForTenantDatasourceAndIdentifier(Guid tenantId, string datasourceName, string identifier)
+    {
+        return MetaClient.TenantReportLookupMetadataForTenantAndLookup(tenantId, datasourceName, identifier);
+    }
 }

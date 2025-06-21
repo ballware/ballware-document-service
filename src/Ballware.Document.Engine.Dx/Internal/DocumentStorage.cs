@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Ballware.Document.Authorization;
 using Ballware.Document.Metadata;
+using DevExpress.DataAccess.Sql;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ballware.Document.Engine.Dx.Internal;
@@ -124,6 +125,7 @@ public class DocumentStorage : ReportStorageWebExtension
         using var scope = _serviceProvider.CreateScope();
         
         var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
+        var metaDatasourceProvider = scope.ServiceProvider.GetRequiredService<IMetaDatasourceProvider>();
 
         var tenantId = GetCurrentTenant();
         var currentUser = GetCurrentUser();
@@ -134,7 +136,7 @@ public class DocumentStorage : ReportStorageWebExtension
         {
             var entity = report.DataMember?.ToLowerInvariant();
             var displayName = report.DisplayName;
-            var reportParameter = ExtractParameterDefinition(report, metaProvider, tenantId.Value, currentUser.Value);
+            var reportParameter = ExtractParameterDefinition(report, metaDatasourceProvider, tenantId.Value);
             
             byte[] reportBinary;
             
@@ -157,6 +159,7 @@ public class DocumentStorage : ReportStorageWebExtension
         using var scope = _serviceProvider.CreateScope();
         
         var metaProvider = scope.ServiceProvider.GetRequiredService<IDocumentMetadataProvider>();
+        var metaDatasourceProvider = scope.ServiceProvider.GetRequiredService<IMetaDatasourceProvider>();
 
         var tenantId = GetCurrentTenant();
         var currentUser = GetCurrentUser();
@@ -165,7 +168,7 @@ public class DocumentStorage : ReportStorageWebExtension
         {
             var entity = report.DataMember?.ToLowerInvariant();
             var displayName = report.DisplayName;
-            var reportParameter = ExtractParameterDefinition(report, metaProvider, tenantId.Value, currentUser.Value);
+            var reportParameter = ExtractParameterDefinition(report, metaDatasourceProvider, tenantId.Value);
             
             byte[] reportBinary;
             
@@ -201,45 +204,57 @@ public class DocumentStorage : ReportStorageWebExtension
         throw new ArgumentException("Tenant missing");
     }
 
-    private static string ExtractParameterDefinition(XtraReport report, IDocumentMetadataProvider metaProvider, Guid tenant, Guid user)
+    private static string ExtractParameterDefinition(XtraReport report, IMetaDatasourceProvider metaDatasourceProvider, Guid tenant)
     {
-        using (var stream = new MemoryStream())
-        using (var writer = new Utf8JsonWriter(stream))
+        using var stream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(stream);
+        
+        writer.WriteStartArray();
+
+        foreach (var parameter in report.Parameters)
         {
-            writer.WriteStartArray();
-
-            foreach (var parameter in report.Parameters)
+            if (parameter.Visible)
             {
-                if (parameter.Visible)
+                writer.WriteStartObject();
+
+                writer.WriteString("name", parameter.Name);
+                writer.WriteString("description", parameter.Description);
+                writer.WriteString("type", parameter.Type.Name);
+                writer.WriteBoolean("multi", parameter.MultiValue);
+                    
+                if (parameter.ValueSourceSettings is DynamicListLookUpSettings settings 
+                    && settings.DataSource is SqlDataSource sqlDataSource
+                    && !string.IsNullOrEmpty(sqlDataSource.Name)
+                    && !string.IsNullOrEmpty(settings.DataMember))
                 {
-                    writer.WriteStartObject();
-
-                    writer.WriteString("name", parameter.Name);
-                    writer.WriteString("description", parameter.Description);
-                    writer.WriteString("type", parameter.Type.Name);
-                    writer.WriteBoolean("multi", parameter.MultiValue);
-
-                    /*
-                    if (parameter.ValueSourceSettings != null && parameter.ValueSourceSettings is DynamicListLookUpSettings settings)
+                    try
                     {
-                        var lookup = metaClient.MetadataForLookupByTenantAndIdentifierAsync(tenant, settings.DataMember).GetAwaiter().GetResult();
+                        var lookupMetadata =
+                            metaDatasourceProvider.LookupMetadataForTenantDatasourceAndIdentifier(tenant,
+                                sqlDataSource.Name, settings.DataMember);
 
-                        writer.WriteString("lookupId", lookup.Id);
-                        writer.WriteString("lookupIdentifier", lookup.Identifier);
-                        writer.WriteString("lookupDisplayMember", settings.DisplayMember);
-                        writer.WriteString("lookupDataMember", settings.ValueMember);
+                        foreach (var entry in lookupMetadata)
+                        {
+                            writer.WriteString(entry.Key, entry.Value.ToString());
+                            writer.WriteString("lookupDisplayMember", settings.DisplayMember);
+                            writer.WriteString("lookupDataMember", settings.ValueMember);
+                        }
+                    } 
+                    catch (Exception ex)
+                    {
+                        // Handle exception if lookup metadata cannot be found
+                        writer.WriteString("error", ex.Message);
                     }
-                    */
-
-                    writer.WriteEndObject();
                 }
+
+                writer.WriteEndObject();
             }
-
-            writer.WriteEndArray();
-            writer.Flush();
-
-            return Encoding.UTF8.GetString(stream.ToArray());
         }
+
+        writer.WriteEndArray();
+        writer.Flush();
+
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     private static byte[] LoadPrintDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId, IEnumerable<Guid> ids)
