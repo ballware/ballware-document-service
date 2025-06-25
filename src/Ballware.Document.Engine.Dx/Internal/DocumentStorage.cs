@@ -236,9 +236,10 @@ public class DocumentStorage : ReportStorageWebExtension
                         foreach (var entry in lookupMetadata)
                         {
                             writer.WriteString(entry.Key, entry.Value.ToString());
-                            writer.WriteString("lookupDisplayMember", settings.DisplayMember);
-                            writer.WriteString("lookupDataMember", settings.ValueMember);
                         }
+                        
+                        writer.WriteString("lookupDisplayMember", settings.DisplayMember);
+                        writer.WriteString("lookupDataMember", settings.ValueMember);
                     } 
                     catch (Exception ex)
                     {

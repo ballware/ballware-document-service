@@ -26,6 +26,18 @@ public class MetaServiceDocumentMetadataProvider : IDocumentMetadataProvider
         
         return document.ReportBinary;
     }
+    
+    public async Task<byte[]> DocumentBinaryForTenantAndIdAsync(Guid tenantId, Guid documentId)
+    {
+        var document = await MetaClient.DocumentMetadataForTenantAndIdAsync(tenantId, documentId);
+
+        if (document == null || document.ReportBinary == null)
+        {
+            throw new InvalidOperationException($"Document with ID {documentId} not found for tenant {tenantId}.");
+        }
+        
+        return document.ReportBinary;
+    }
 
     public IEnumerable<DocumentSelectEntry> DocumentsForTenant(Guid tenantId)
     {
@@ -63,5 +75,19 @@ public class MetaServiceDocumentMetadataProvider : IDocumentMetadataProvider
         document.ReportParameter = parameter;
         
         MetaClient.DocumentSaveForTenantBehalfOfUser(tenantId, userId, document);
+    }
+    
+    public async Task UpdateDocumentBinaryForTenantAndIdAsync(Guid tenantId, Guid userId, Guid documentId, byte[] binary)
+    {
+        var document = await MetaClient.DocumentMetadataForTenantAndIdAsync(tenantId, documentId);
+        
+        if (document == null)
+        {
+            throw new InvalidOperationException($"Document with ID {documentId} not found for tenant {tenantId}.");
+        }
+        
+        document.ReportBinary = binary;
+        
+        await MetaClient.DocumentSaveForTenantBehalfOfUserAsync(tenantId, userId, document);
     }
 }

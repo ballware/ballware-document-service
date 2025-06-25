@@ -21,6 +21,7 @@
       <PackageReference Include="DevExpress.Pdf.SkiaRenderer" Version="24.2.7" />
       <PackageReference Include="DevExpress.Web.Reporting.Common" Version="24.2.7" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+      <PackageReference Include="Quartz" Version="3.8.1" />
     </ItemGroup>
 
     <ItemGroup>

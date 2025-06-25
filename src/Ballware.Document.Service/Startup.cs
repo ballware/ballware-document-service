@@ -1,7 +1,9 @@
 using System.Globalization;
+using Ballware.Document.Api.Endpoints;
 using Ballware.Document.Authorization;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Jobs;
+using Ballware.Document.Jobs.Configuration;
 using Ballware.Document.Metadata;
 using Ballware.Document.Service.Adapter;
 using Ballware.Document.Service.Configuration;
@@ -35,6 +37,8 @@ namespace Ballware.Document.Service;
 
 public class Startup(IWebHostEnvironment environment, ConfigurationManager configuration, IServiceCollection services)
 {
+    private const string ClaimTypeScope = "scope";
+    
     private IWebHostEnvironment Environment { get; } = environment;
     private ConfigurationManager Configuration { get; } = configuration;
     private IServiceCollection Services { get; } = services;
@@ -45,6 +49,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         AuthorizationOptions? authorizationOptions =
             Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
         SessionOptions? sessionOptions = Configuration.GetSection("Session").Get<SessionOptions>();
+        MailOptions? mailOptions = Configuration.GetSection("Mail").Get<MailOptions>();
         SwaggerOptions? swaggerOptions = Configuration.GetSection("Swagger").Get<SwaggerOptions>();
         ServiceClientOptions? metaClientOptions = Configuration.GetSection("MetaClient").Get<ServiceClientOptions>();
         ServiceClientOptions? storageClientOptions = Configuration.GetSection("StorageClient").Get<ServiceClientOptions>();
@@ -56,6 +61,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddOptionsWithValidateOnStart<SessionOptions>()
             .Bind(Configuration.GetSection("Session"))
+            .ValidateDataAnnotations();
+        
+        Services.AddOptionsWithValidateOnStart<MailOptions>()
+            .Bind(Configuration.GetSection("Mail"))
             .ValidateDataAnnotations();
         
         Services.AddOptionsWithValidateOnStart<SwaggerOptions>()
@@ -77,6 +86,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         if (authorizationOptions == null)
         {
             throw new ConfigurationException("Required configuration for authorization is missing");
+        }
+        
+        if (mailOptions == null)
+        {
+            throw new ConfigurationException("Required configuration for mail is missing");
         }
         
         if (sessionOptions == null)
@@ -125,7 +139,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 
                 options.RegisterBallwareSessionTokenHandling();
             })
-            .AddJwtBearer(options =>
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.MapInboundClaims = false;
                 options.Authority = authorizationOptions.Authority;
@@ -146,6 +160,18 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 options.Authority!.TrimEnd('/') + "/.well-known/openid-configuration",
                 new OpenIdConnectConfigurationRetriever());
         });
+
+        Services.AddAuthorizationBuilder()
+            .AddPolicy("documentApi", policy => policy
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                .RequireAuthenticatedUser()
+                .RequireAssertion(context =>
+                    context.User
+                        .Claims
+                        .Where(c => ClaimTypeScope == c.Type)
+                        .SelectMany(c => c.Value.Split(' '))
+                        .Any(s => s.Equals(authorizationOptions.RequiredUserScope, StringComparison.Ordinal)))
+            );
         
         if (corsOptions != null)
         {
@@ -169,7 +195,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         {
             options.SerializerOptions.PropertyNamingPolicy = null;
         });
-
+        
         Services.AddBallwareSession(sessionOptions);
         Services.AddBallwareDocumentAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
         
@@ -181,7 +207,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddControllers();
         
         Services.Configure<QuartzOptions>(Configuration.GetSection("Quartz"));
-        Services.AddBallwareDocumentBackgroundJobs();
+        Services.AddBallwareDocumentBackgroundJobs(mailOptions);
         
         Services.AddClientCredentialsTokenManagement()
             .AddClient("meta", client =>
@@ -268,11 +294,14 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddEndpointsApiExplorer();
 
         Services.AddScoped<IDocumentMetadataProvider, MetaServiceDocumentMetadataProvider>();
+        Services.AddScoped<INotificationMetadataProvider, MetaServiceNotificationMetadataProvider>();
+        Services.AddScoped<ISubscriptionMetadataProvider, MetaServiceSubscriptionMetadataProvider>();
         Services.AddScoped<IDocumentProcessingStateProvider, MetaServiceProcessingStateProvider>();
         Services.AddScoped<IDocumentPickvalueProvider, MetaServicePickvalueProvider>();
         Services.AddScoped<IMetaDatasourceProvider, MetaServiceDatasourceProvider>();
         Services.AddScoped<IDocumentLookupProvider, GenericServiceLookupProvider>();
         Services.AddScoped<ITenantDatasourceProvider, GenericServiceDatasourceProvider>();
+        
         Services.AddBallwareDevExpressReporting();
         
         if (swaggerOptions != null)
@@ -374,6 +403,8 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.MapControllers();
         app.MapRazorPages();
         app.MapSignOnEndpoint();
+        app.MapDocumentUserApi("document");
+        app.MapSubscriptionUserApi("subscription");
         
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;

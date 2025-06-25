@@ -12,5 +12,8 @@ public class MetaServiceDocumentMetadataProfile : Profile
         
         CreateMap<Ballware.Meta.Client.DocumentSelectListEntry, DocumentSelectEntry>()
             .ForMember(dst => dst.DisplayName, opt => opt.MapFrom(src => src.Name));
+
+        CreateMap<Ballware.Meta.Client.Notification, Notification>();
+        CreateMap<Ballware.Meta.Client.Subscription, Subscription>();
     }
 }

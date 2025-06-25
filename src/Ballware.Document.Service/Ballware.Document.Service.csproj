@@ -37,6 +37,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Ballware.Document.Api\Ballware.Document.Api.csproj" />
       <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
       <ProjectReference Include="..\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj" />
       <ProjectReference Include="..\Ballware.Document.Jobs\Ballware.Document.Jobs.csproj" />

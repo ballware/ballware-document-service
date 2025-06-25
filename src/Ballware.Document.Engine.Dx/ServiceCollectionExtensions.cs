@@ -1,4 +1,5 @@
 using Ballware.Document.Engine.Dx.Internal;
+using Ballware.Document.Metadata;
 using DevExpress.AspNetCore;
 using DevExpress.AspNetCore.Reporting;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<FetchNameByStateFromProcessingState>();
         services.AddSingleton<FetchTextByValueFromPickvalue>();
         services.AddScoped<IDocumentDatasourceProvider, DocumentDatasourceProvider>();
+        services.AddScoped<IDocumentModificationProvider, DocumentModificationProvider>();
+        services.AddScoped<IDocumentMailGenerator, DocumentMailGenerator>();
         services.AddDevExpressControls();
         
         services.ConfigureReportingServices(builder =>
