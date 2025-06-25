@@ -37,6 +37,7 @@ RUN node -v \
 
 WORKDIR /src
 
+COPY ./Ballware.Document.Api ./Ballware.Document.Api
 COPY ./Ballware.Document.Authorization ./Ballware.Document.Authorization
 COPY ./Ballware.Document.Engine.Dx ./Ballware.Document.Engine.Dx
 COPY ./Ballware.Document.Jobs ./Ballware.Document.Jobs
