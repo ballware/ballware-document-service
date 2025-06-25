@@ -26,4 +26,14 @@ public class MetaServiceSubscriptionMetadataProvider : ISubscriptionMetadataProv
     {
         await MetaClient.SubscriptionSetSendResultAsync(tenantId, subscriptionId, sendResult ?? string.Empty);
     }
+
+    public async Task<IEnumerable<TenantListEntry>> GetReportAllowedTenantsAsync()
+    {
+        return Mapper.Map<IEnumerable<TenantListEntry>>(await MetaClient.TenantReportAllowedTenantsAsync());
+    }
+
+    public async Task<IEnumerable<Subscription>> GetActiveSubscriptionsForTenantFrequencyAsync(Guid tenantId, int frequency)
+    {
+        return Mapper.Map<IEnumerable<Subscription>>(await MetaClient.SubscriptionActiveByFrequencyAsync(tenantId, frequency));
+    }
 }

@@ -50,6 +50,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
         SessionOptions? sessionOptions = Configuration.GetSection("Session").Get<SessionOptions>();
         MailOptions? mailOptions = Configuration.GetSection("Mail").Get<MailOptions>();
+        TriggerOptions? triggerOptions = Configuration.GetSection("Trigger").Get<TriggerOptions>();
         SwaggerOptions? swaggerOptions = Configuration.GetSection("Swagger").Get<SwaggerOptions>();
         ServiceClientOptions? metaClientOptions = Configuration.GetSection("MetaClient").Get<ServiceClientOptions>();
         ServiceClientOptions? storageClientOptions = Configuration.GetSection("StorageClient").Get<ServiceClientOptions>();
@@ -61,6 +62,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddOptionsWithValidateOnStart<SessionOptions>()
             .Bind(Configuration.GetSection("Session"))
+            .ValidateDataAnnotations();
+        
+        Services.AddOptionsWithValidateOnStart<TriggerOptions>()
+            .Bind(Configuration.GetSection("Trigger"))
             .ValidateDataAnnotations();
         
         Services.AddOptionsWithValidateOnStart<MailOptions>()
@@ -91,6 +96,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         if (mailOptions == null)
         {
             throw new ConfigurationException("Required configuration for mail is missing");
+        }
+
+        if (triggerOptions == null)
+        {
+            triggerOptions = new TriggerOptions();
         }
         
         if (sessionOptions == null)
@@ -207,7 +217,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddControllers();
         
         Services.Configure<QuartzOptions>(Configuration.GetSection("Quartz"));
-        Services.AddBallwareDocumentBackgroundJobs(mailOptions);
+        Services.AddBallwareDocumentBackgroundJobs(mailOptions, triggerOptions);
         
         Services.AddClientCredentialsTokenManagement()
             .AddClient("meta", client =>

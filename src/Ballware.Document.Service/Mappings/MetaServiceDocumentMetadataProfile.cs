@@ -9,6 +9,8 @@ public class MetaServiceDocumentMetadataProfile : Profile
     {
         CreateMap<Ballware.Meta.Client.ServiceTenantReportDatasourceDefinition, ReportDatasourceDefinition>();
         CreateMap<Ballware.Meta.Client.ServiceTenantReportDatasourceTable, ReportDatasourceTable>();
+
+        CreateMap<Ballware.Meta.Client.TenantSelectListEntry, TenantListEntry>();
         
         CreateMap<Ballware.Meta.Client.DocumentSelectListEntry, DocumentSelectEntry>()
             .ForMember(dst => dst.DisplayName, opt => opt.MapFrom(src => src.Name));
