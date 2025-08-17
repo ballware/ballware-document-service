@@ -40,6 +40,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Ballware.Document.Api\Ballware.Document.Api.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data.Ef.Postgres\Ballware.Document.Data.Ef.Postgres.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data.Ef.SqlServer\Ballware.Document.Data.Ef.SqlServer.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data.Ef\Ballware.Document.Data.Ef.csproj" />
       <ProjectReference Include="..\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj" />
       <ProjectReference Include="..\Ballware.Document.Jobs\Ballware.Document.Jobs.csproj" />
       <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />

@@ -1,5 +1,9 @@
 using System.Globalization;
 using Ballware.Document.Api.Endpoints;
+using Ballware.Document.Data.Ef;
+using Ballware.Document.Data.Ef.Configuration;
+using Ballware.Document.Data.Ef.Postgres;
+using Ballware.Document.Data.Ef.SqlServer;
 using Ballware.Shared.Authorization;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Jobs;
@@ -46,6 +50,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         CorsOptions? corsOptions = Configuration.GetSection("Cors").Get<CorsOptions>();
         AuthorizationOptions? authorizationOptions =
             Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
+        StorageOptions? storageOptions = Configuration.GetSection("Storage").Get<StorageOptions>();
         SessionOptions? sessionOptions = Configuration.GetSection("Session").Get<SessionOptions>();
         MailOptions? mailOptions = Configuration.GetSection("Mail").Get<MailOptions>();
         TriggerOptions? triggerOptions = Configuration.GetSection("Trigger").Get<TriggerOptions>();
@@ -57,6 +62,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddOptionsWithValidateOnStart<AuthorizationOptions>()
             .Bind(Configuration.GetSection("Authorization"))
             .ValidateDataAnnotations();
+        
+        Services.AddOptionsWithValidateOnStart<StorageOptions>()
+            .Bind(Configuration.GetSection("Storage"))
+            .ValidateDataAnnotations();            
         
         Services.AddOptionsWithValidateOnStart<SessionOptions>()
             .Bind(Configuration.GetSection("Session"))
@@ -86,9 +95,16 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             .Bind(Configuration.GetSection("GenericClient"))
             .ValidateDataAnnotations();
 
-        if (authorizationOptions == null)
+        if (authorizationOptions == null || storageOptions == null)
         {
-            throw new ConfigurationException("Required configuration for authorization is missing");
+            throw new ConfigurationException("Required configuration for authorization or storage is missing");
+        }
+        
+        var validProviders = new[] { "mssql", "postgres" };
+        
+        if (!validProviders.Contains(storageOptions.Provider))
+        {
+            throw new ConfigurationException("Invalid storage provider specified. Valid providers are: " + string.Join(", ", validProviders));
         }
         
         if (mailOptions == null)
@@ -295,9 +311,33 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddAutoMapper(config =>
         {
+            config.AddBallwareDocumentStorageMappings();
             config.AddProfile<MetaServiceDocumentMetadataProfile>();
             config.AddProfile<GenericServiceDocumentMetadataProfile>();
         });
+        
+        var storageConnectionStringIdentifier = storageOptions.ConnectionString;
+            
+        if (string.IsNullOrWhiteSpace(storageConnectionStringIdentifier))
+        {
+            throw new ConfigurationException("Storage connection string is not configured");
+        }
+            
+        var storageConnectionString = Configuration.GetConnectionString(storageConnectionStringIdentifier);
+            
+        if (string.IsNullOrWhiteSpace(storageConnectionString))
+        {
+            throw new ConfigurationException("Storage connection string is not found in configuration");
+        }
+        
+        if ("mssql".Equals(storageOptions.Provider, StringComparison.InvariantCultureIgnoreCase))
+        {
+            Services.AddBallwareDocumentStorageForSqlServer(storageOptions, storageConnectionString);    
+        } 
+        else if ("postgres".Equals(storageOptions.Provider, StringComparison.InvariantCultureIgnoreCase))
+        {
+            Services.AddBallwareDocumentStorageForPostgres(storageOptions, storageConnectionString);
+        }
         
         Services.AddEndpointsApiExplorer();
 
