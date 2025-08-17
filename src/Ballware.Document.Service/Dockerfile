@@ -38,6 +38,10 @@ RUN node -v \
 WORKDIR /src
 
 COPY ./Ballware.Document.Api ./Ballware.Document.Api
+COPY ./Ballware.Document.Data ./Ballware.Document.Data
+COPY ./Ballware.Document.Data.Ef ./Ballware.Document.Data.Ef
+COPY ./Ballware.Document.Data.Ef.Postgres ./Ballware.Document.Data.Ef.Postgres
+COPY ./Ballware.Document.Data.Ef.SqlServer ./Ballware.Document.Data.Ef.SqlServer
 COPY ./Ballware.Document.Engine.Dx ./Ballware.Document.Engine.Dx
 COPY ./Ballware.Document.Jobs ./Ballware.Document.Jobs
 COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
