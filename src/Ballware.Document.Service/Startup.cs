@@ -1,6 +1,6 @@
 using System.Globalization;
 using Ballware.Document.Api.Endpoints;
-using Ballware.Document.Authorization;
+using Ballware.Shared.Authorization;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Jobs;
 using Ballware.Document.Jobs.Configuration;
@@ -13,11 +13,9 @@ using Ballware.Document.Session;
 using Ballware.Generic.Client;
 using Ballware.Meta.Client;
 using Ballware.Storage.Client;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -207,7 +205,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         });
         
         Services.AddBallwareSession(sessionOptions);
-        Services.AddBallwareDocumentAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
+        Services.AddBallwareSharedAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
         
         Services.AddHttpContextAccessor();
         

@@ -12,11 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Storage.Client", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Engine.Dx", "src\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj", "{468B6BA3-482F-4330-806E-831D1722ABFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Authorization", "src\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj", "{48D0E156-B0CC-481E-A10A-AB409197E91B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Metadata", "src\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj", "{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Authorization.Tests", "test\Ballware.Document.Authorization.Tests\Ballware.Document.Authorization.Tests.csproj", "{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Session", "src\Ballware.Document.Session\Ballware.Document.Session.csproj", "{35429131-7290-41D0-A601-F0A55C20A928}"
 EndProject
@@ -52,18 +48,10 @@ Global
 		{468B6BA3-482F-4330-806E-831D1722ABFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{468B6BA3-482F-4330-806E-831D1722ABFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{468B6BA3-482F-4330-806E-831D1722ABFD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{48D0E156-B0CC-481E-A10A-AB409197E91B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F543B0CB-1A34-49E4-B28D-AA14A4031AA5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35429131-7290-41D0-A601-F0A55C20A928}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35429131-7290-41D0-A601-F0A55C20A928}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35429131-7290-41D0-A601-F0A55C20A928}.Release|Any CPU.ActiveCfg = Release|Any CPU

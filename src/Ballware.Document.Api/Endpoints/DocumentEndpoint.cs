@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Ballware.Document.Authorization;
+using Ballware.Shared.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

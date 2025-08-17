@@ -7,7 +7,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Ballware.Document.Authorization;
+using Ballware.Shared.Authorization;
 using Ballware.Document.Metadata;
 using DevExpress.DataAccess.Sql;
 using Microsoft.Extensions.DependencyInjection;

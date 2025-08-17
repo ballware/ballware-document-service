@@ -18,16 +18,13 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1" />
+        <PackageReference Include="ballware.shared.authorization" Version="0.0.5" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
         <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Quartz" Version="3.8.1" />
         <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
     </ItemGroup>
 
 </Project>

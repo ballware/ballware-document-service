@@ -1,4 +1,4 @@
-using Ballware.Document.Authorization;
+using Ballware.Shared.Authorization;
 using DevExpress.AspNetCore.Reporting.ReportDesigner.Native.Services;
 using DevExpress.XtraReports.Web.ReportDesigner.Services;
 using Microsoft.AspNetCore.Authorization;
