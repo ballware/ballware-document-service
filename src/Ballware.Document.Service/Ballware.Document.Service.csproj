@@ -11,6 +11,7 @@
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1" />
         <PackageReference Include="ballware.shared.authorization" Version="0.0.5" />
+        <PackageReference Include="Ballware.Storage.Service.Client" Version="9.2.0" />
         <PackageReference Include="Duende.AccessTokenManagement" Version="3.1.1" />
         <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="3.1.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
@@ -45,7 +46,6 @@
       <ProjectReference Include="..\Ballware.Document.Session\Ballware.Document.Session.csproj" />
       <ProjectReference Include="..\Ballware.Generic.Client\Ballware.Generic.Client.csproj" />
       <ProjectReference Include="..\Ballware.Meta.Client\Ballware.Meta.Client.csproj" />
-      <ProjectReference Include="..\Ballware.Storage.Client\Ballware.Storage.Client.csproj" />
     </ItemGroup>
 
 </Project>

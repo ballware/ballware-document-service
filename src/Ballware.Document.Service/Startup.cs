@@ -12,7 +12,7 @@ using Ballware.Document.Service.Mappings;
 using Ballware.Document.Session;
 using Ballware.Generic.Client;
 using Ballware.Meta.Client;
-using Ballware.Storage.Client;
+using Ballware.Storage.Service.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -261,7 +261,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 #endif                  
             .AddClientCredentialsTokenHandler("meta");
 
-        Services.AddHttpClient<BallwareStorageClient>(client =>
+        Services.AddHttpClient<StorageServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(storageClientOptions.ServiceUrl);
             })
