@@ -28,6 +28,14 @@ jobs:
         uses: gittools/actions/gitversion/execute@v0
         with:
           useConfigFile: true
+      - name: Restore dependencies
+        run: |
+          dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" \
+            --name github \
+            --username frankball \
+            --password ${{ secrets.GITHUB_TOKEN }} \
+            --store-password-in-clear-text
+          dotnet restore ballware-document-service.sln
       - name: Pack NuGet packages
         run: |
           dotnet restore ballware-document-service.sln -s https://api.nuget.org/v3/index.json -s "${{ secrets.DEVEXPRESS_NUGETFEED }}"
@@ -70,6 +78,7 @@ jobs:
           file: src/Ballware.Document.Service/Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
+	    GITHUB_PAT=${{ secrets.GITHUB_TOKEN }}
             DEVEXPRESS_NUGETFEED=${{ secrets.DEVEXPRESS_NUGETFEED }}
           push: true
           tags: |

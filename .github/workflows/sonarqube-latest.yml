@@ -40,10 +40,19 @@ jobs:
             /k:"ballware_ballware-document-service" \
             /o:"ballware" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.dotcover.reportsPaths="coverage.html"
-        
+            /d:sonar.cs.dotcover.reportsPaths="coverage.html" \
+            /d:sonar.exclusions="**/Migrations/**/*"
+          
       - name: Restore dependencies
-        run: dotnet restore ballware-document-service.sln -s https://api.nuget.org/v3/index.json -s "${{ secrets.DEVEXPRESS_NUGETFEED }}"
+
+        run: | 
+    	  dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" \
+            --name github \
+            --username frankball \
+            --password ${{ secrets.GITHUB_TOKEN }} \
+            --store-password-in-clear-text
+	  dotnet nuget add source "${{ secrets.DEVEXPRESS_NUGETFEED }}" --name devexpress  
+	  dotnet restore ballware-document-service.sln
         
       - name: Build solution
         run: dotnet build ballware-document-service.sln --no-incremental --configuration Release
