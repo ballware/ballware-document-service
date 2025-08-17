@@ -78,7 +78,7 @@ jobs:
           file: src/Ballware.Document.Service/Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
-	    GITHUB_PAT=${{ secrets.GITHUB_TOKEN }}
+            GITHUB_PAT=${{ secrets.GITHUB_TOKEN }}
             DEVEXPRESS_NUGETFEED=${{ secrets.DEVEXPRESS_NUGETFEED }}
           push: true
           tags: |
