@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="ballware.shared.authorization" Version="0.0.5" />
+      <PackageReference Include="ballware.shared.authorization" Version="0.1.0-alpha.2" />
       <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="24.2.7" />
       <PackageReference Include="DevExpress.Drawing" Version="24.2.7" />
       <PackageReference Include="DevExpress.Drawing.Skia" Version="24.2.7" />

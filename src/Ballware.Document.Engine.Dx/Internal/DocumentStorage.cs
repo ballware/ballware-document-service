@@ -146,7 +146,7 @@ public class DocumentStorage : ReportStorageWebExtension
                 reportBinary = ms.ToArray();
             }
             
-            metaProvider.UpdateDocumentMetadataForTenantAndId(tenantId.Value, currentUser.Value, Guid.Parse(matchGuid.Groups[0].Value), entity, displayName,reportBinary, reportParameter);
+            metaProvider.UpdateDocumentMetadataAndBinaryForTenantAndIdAsync(tenantId.Value, currentUser.Value, Guid.Parse(matchGuid.Groups[0].Value), entity, displayName,reportBinary, reportParameter).GetAwaiter().GetResult();
         }
         else if ("new".Equals(url))
         {
@@ -178,7 +178,7 @@ public class DocumentStorage : ReportStorageWebExtension
                 reportBinary = ms.ToArray();
             }
 
-            var id = metaProvider.AddDocumentMetadataForTenant(tenantId.Value, currentUser.Value, entity, displayName, reportBinary, reportParameter);
+            var id = metaProvider.AddDocumentMetadataForTenantAsync(tenantId.Value, currentUser.Value, entity, displayName, reportBinary, reportParameter).GetAwaiter().GetResult();
 
             return id.ToString();
         }
@@ -196,9 +196,9 @@ public class DocumentStorage : ReportStorageWebExtension
 
         if (tenantId != null)
         {
-            var documents = metaProvider.DocumentsForTenant(tenantId.Value);
+            var documents = metaProvider.DocumentsForTenantAsync(tenantId.Value).GetAwaiter().GetResult();
 
-            return documents.ToDictionary(d => $"{d.Id}", d => d.DisplayName);
+            return documents.ToDictionary(d => $"{d.Id}", d => d.Name ?? string.Empty);
         }
 
         throw new ArgumentException("Tenant missing");
@@ -260,7 +260,7 @@ public class DocumentStorage : ReportStorageWebExtension
 
     private static byte[] LoadPrintDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId, IEnumerable<Guid> ids)
     {
-       var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId, documentId);
+       var reportBinary = metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId).GetAwaiter().GetResult();
         
         XtraReport report = new XtraReport();
 
@@ -291,7 +291,7 @@ public class DocumentStorage : ReportStorageWebExtension
 
     private static byte[] LoadSingleDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId)
     {
-        var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId, documentId);
+        var reportBinary = metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId).GetAwaiter().GetResult();
 
         XtraReport report = new XtraReport();
 

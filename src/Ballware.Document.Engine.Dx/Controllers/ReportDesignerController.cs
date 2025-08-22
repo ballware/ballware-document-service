@@ -8,6 +8,7 @@ namespace Ballware.Document.Engine.Dx.Controllers;
 
 [Route("api/ReportDesigner")]
 [Authorize(AuthenticationSchemes = "DistributedSession")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class ReportDesignerController : DevExpress.AspNetCore.Reporting.ReportDesigner.ReportDesignerController
 {
     private IPrincipalUtils PrincipalUtils { get; }

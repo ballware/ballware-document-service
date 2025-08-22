@@ -1,4 +1,5 @@
 using System.Globalization;
+using Ballware.Document.Api;
 using Ballware.Document.Api.Endpoints;
 using Ballware.Document.Data.Ef;
 using Ballware.Document.Data.Ef.Configuration;
@@ -12,10 +13,15 @@ using Ballware.Document.Metadata;
 using Ballware.Document.Service.Adapter;
 using Ballware.Document.Service.Configuration;
 using Ballware.Document.Service.Endpoints;
+using Ballware.Document.Service.Extensions;
 using Ballware.Document.Service.Mappings;
 using Ballware.Document.Session;
-using Ballware.Generic.Client;
-using Ballware.Meta.Client;
+using Ballware.Generic.Service.Client;
+using Ballware.Meta.Service.Client;
+using Ballware.Shared.Api;
+using Ballware.Shared.Api.Endpoints;
+using Ballware.Shared.Authorization.Jint;
+using Ballware.Shared.Data.Repository;
 using Ballware.Storage.Service.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -262,7 +268,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 client.Scope = genericClientOptions.Scopes;
             });
         
-        Services.AddHttpClient<BallwareMetaClient>(client =>
+        Services.AddHttpClient<MetaServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(metaClientOptions.ServiceUrl);
             })
@@ -294,7 +300,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 #endif            
             .AddClientCredentialsTokenHandler("storage");
         
-        Services.AddHttpClient<BallwareGenericClient>(client =>
+        Services.AddHttpClient<GenericServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(genericClientOptions.ServiceUrl);
             })
@@ -341,14 +347,23 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddEndpointsApiExplorer();
 
-        Services.AddScoped<IDocumentMetadataProvider, MetaServiceDocumentMetadataProvider>();
-        Services.AddScoped<INotificationMetadataProvider, MetaServiceNotificationMetadataProvider>();
-        Services.AddScoped<ISubscriptionMetadataProvider, MetaServiceSubscriptionMetadataProvider>();
-        Services.AddScoped<IDocumentProcessingStateProvider, MetaServiceProcessingStateProvider>();
-        Services.AddScoped<IDocumentPickvalueProvider, MetaServicePickvalueProvider>();
-        Services.AddScoped<IMetaDatasourceProvider, MetaServiceDatasourceProvider>();
-        Services.AddScoped<IDocumentLookupProvider, GenericServiceLookupProvider>();
-        Services.AddScoped<ITenantDatasourceProvider, GenericServiceDatasourceProvider>();
+        Services.AddScoped<IDocumentMetadataProvider, DocumentMetadataProvider>();
+        Services.AddScoped<INotificationMetadataProvider, NotificationMetadataProvider>();
+        Services.AddScoped<ISubscriptionMetadataProvider, SubscriptionMetadataProvider>();
+        Services.AddScoped<IDocumentProcessingStateProvider, MetaServiceProvider>();
+        Services.AddScoped<IProcessingStateProvider, MetaServiceProvider>();
+        Services.AddScoped<IDocumentPickvalueProvider, MetaServiceProvider>();
+        Services.AddScoped<IMetaDatasourceProvider, MetaServiceProvider>();
+        Services.AddScoped<IDocumentLookupProvider, GenericServiceProvider>();
+        Services.AddScoped<ITenantDatasourceProvider, GenericServiceProvider>();
+        Services.AddScoped<ITenantableRepositoryHook<Data.Public.Document, Data.Persistables.Document>, DocumentImportExportRepositoryHook>();
+        Services.AddScoped<IAuthorizationMetadataProvider, MetaServiceProvider>();
+        Services.AddScoped<IFileStorageProvider, StorageServiceProvider>();
+        Services.AddScoped<IJobMetadataProvider, MetaServiceProvider>();
+        Services.AddScoped<IExportMetadataProvider, MetaServiceProvider>();
+
+        Services.AddBallwareSharedJintRightsChecker();
+        Services.AddBallwareSharedApiDependencies();
         
         Services.AddBallwareDevExpressReporting();
         
@@ -451,8 +466,18 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.MapControllers();
         app.MapRazorPages();
         app.MapSignOnEndpoint();
-        app.MapDocumentUserApi("document");
-        app.MapSubscriptionUserApi("subscription");
+        
+        app.MapDocumentUserApi("/document/document");
+        app.MapDocumentServiceApi("/document/document");
+        app.MapTenantableEditingApi<Data.Public.Document>("/document/document", "meta", "document", "Document", "Document", "documentApi", "document");
+        
+        app.MapNotificationUserApi("/document/notification");
+        app.MapNotificationServiceApi("/document/notification");
+        app.MapTenantableEditingApi<Data.Public.Notification>("/document/notification", "meta", "notification", "Notification", "Notification", "documentApi", "document");
+        
+        app.MapSubscriptionUserApi("/document/subscription");
+        app.MapSubscriptionServiceApi("/document/subscription");
+        app.MapTenantableEditingApi<Data.Public.Subscription>("/document/subscription", "meta", "subscription", "Subscription", "Subscription", "documentApi", "document");
         
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;

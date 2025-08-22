@@ -4,10 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Service",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Jobs", "src\Ballware.Document.Jobs\Ballware.Document.Jobs.csproj", "{24DAB8D0-F25A-4F4C-9730-3748BDE218EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Generic.Client", "src\Ballware.Generic.Client\Ballware.Generic.Client.csproj", "{F3CD7EE2-BA8B-4B8B-803E-8F3A69F627B4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Meta.Client", "src\Ballware.Meta.Client\Ballware.Meta.Client.csproj", "{C02F6AC7-0FF7-4C8F-9FD4-94E533D91D3A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Engine.Dx", "src\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj", "{468B6BA3-482F-4330-806E-831D1722ABFD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Metadata", "src\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj", "{C7348F8A-C559-4B9D-B8AB-04B9EDC68E09}"
@@ -42,14 +38,6 @@ Global
 		{24DAB8D0-F25A-4F4C-9730-3748BDE218EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24DAB8D0-F25A-4F4C-9730-3748BDE218EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24DAB8D0-F25A-4F4C-9730-3748BDE218EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F3CD7EE2-BA8B-4B8B-803E-8F3A69F627B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F3CD7EE2-BA8B-4B8B-803E-8F3A69F627B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F3CD7EE2-BA8B-4B8B-803E-8F3A69F627B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F3CD7EE2-BA8B-4B8B-803E-8F3A69F627B4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C02F6AC7-0FF7-4C8F-9FD4-94E533D91D3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C02F6AC7-0FF7-4C8F-9FD4-94E533D91D3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C02F6AC7-0FF7-4C8F-9FD4-94E533D91D3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C02F6AC7-0FF7-4C8F-9FD4-94E533D91D3A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{468B6BA3-482F-4330-806E-831D1722ABFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{468B6BA3-482F-4330-806E-831D1722ABFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{468B6BA3-482F-4330-806E-831D1722ABFD}.Release|Any CPU.ActiveCfg = Release|Any CPU

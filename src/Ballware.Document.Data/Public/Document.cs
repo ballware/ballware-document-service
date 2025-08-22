@@ -9,5 +9,6 @@ public class Document : IEditable
     public string? DisplayName { get; set; }
     public string? Entity { get; set; }
     public int State { get; set; }
+    public byte[]? ReportBinary { get; set; }
     public string? ReportParameter { get; set; }
 }

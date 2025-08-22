@@ -38,6 +38,9 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ITenantableRepository<Subscription>, SubscriptionRepository>();
         services.AddScoped<ISubscriptionMetaRepository, SubscriptionRepository>();
+        
+        services.AddSingleton<IDocumentDbConnectionFactory>(new DocumentDbConnectionFactory(connectionString));       
+        
         services.AddHostedService<InitializationWorker>();
 
         return services;
