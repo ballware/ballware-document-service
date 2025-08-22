@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Ballware.Shared.Authorization" Version="0.1.0-alpha.2" />
+      <PackageReference Include="Ballware.Shared.Authorization" Version="0.1.0" />
     </ItemGroup>
 
     <ItemGroup>
