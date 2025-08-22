@@ -52,6 +52,7 @@ public class MetaServiceProvider : IAuthorizationMetadataProvider, IMetaDatasour
         var documentLookupsSchemaDefinition = new ReportDatasourceDefinition
         {
             Name = DocumentLookupsDatasourceIdentifier,
+            Provider = DocumentDbConnectionFactory.Provider,
             ConnectionString = DocumentDbConnectionFactory.ConnectionString,
             Tables = new []
                 {

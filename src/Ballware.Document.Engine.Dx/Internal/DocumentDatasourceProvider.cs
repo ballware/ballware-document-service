@@ -34,7 +34,21 @@ class DocumentDatasourceProvider : IDocumentDatasourceProvider
                      .Where(definition => !string.IsNullOrEmpty(definition.ConnectionString) 
                                           && !string.IsNullOrEmpty(definition.Name)))
         {
-            var datasource = new SqlDataSource(new CustomStringConnectionParameters(schemaDefinition.ConnectionString))
+            string connectionString;
+            
+            if ("postgres".Equals(schemaDefinition.Provider, StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString = "XpoProvider=Postgres;" + schemaDefinition.ConnectionString;
+            } 
+            else if ("mssql".Equals(schemaDefinition.Provider, StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString = "XpoProvider=MSSqlServer;" + schemaDefinition.ConnectionString;
+            } else
+            {
+                connectionString = schemaDefinition.ConnectionString;           
+            }
+            
+            var datasource = new SqlDataSource(new CustomStringConnectionParameters(connectionString))
             {
                 Name = schemaDefinition.Name
             };
