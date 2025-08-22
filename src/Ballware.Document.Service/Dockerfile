@@ -47,8 +47,6 @@ COPY ./Ballware.Document.Jobs ./Ballware.Document.Jobs
 COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
 COPY ./Ballware.Document.Service ./Ballware.Document.Service
 COPY ./Ballware.Document.Session ./Ballware.Document.Session
-COPY ./Ballware.Meta.Client ./Ballware.Meta.Client
-COPY ./Ballware.Generic.Client ./Ballware.Generic.Client
 
 RUN dotnet restore -s https://api.nuget.org/v3/index.json -s "$DEVEXPRESS_NUGETFEED" "Ballware.Document.Service/Ballware.Document.Service.csproj"
 
