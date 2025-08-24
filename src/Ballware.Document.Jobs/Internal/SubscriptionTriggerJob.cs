@@ -40,11 +40,6 @@ public class SubscriptionTriggerJob : IJob
             throw new ArgumentException($"Subscription {subscriptionId} for tenant {tenantId} unknown");
         }
         
-        if (subscription.NotificationId == null) 
-        {
-            throw new ArgumentException($"Subscription {subscriptionId} for tenant {tenantId} has no notification defined");
-        }
-        
         var notification = await NotificationMetadataProvider.NotificationForTenantAndIdAsync(tenantId, subscription.NotificationId);
 
         if (notification == null)
