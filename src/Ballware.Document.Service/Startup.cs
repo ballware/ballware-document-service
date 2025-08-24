@@ -1,6 +1,11 @@
 using System.Globalization;
+using Ballware.Document.Api;
 using Ballware.Document.Api.Endpoints;
-using Ballware.Document.Authorization;
+using Ballware.Document.Data.Ef;
+using Ballware.Document.Data.Ef.Configuration;
+using Ballware.Document.Data.Ef.Postgres;
+using Ballware.Document.Data.Ef.SqlServer;
+using Ballware.Shared.Authorization;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Jobs;
 using Ballware.Document.Jobs.Configuration;
@@ -8,16 +13,19 @@ using Ballware.Document.Metadata;
 using Ballware.Document.Service.Adapter;
 using Ballware.Document.Service.Configuration;
 using Ballware.Document.Service.Endpoints;
+using Ballware.Document.Service.Extensions;
 using Ballware.Document.Service.Mappings;
 using Ballware.Document.Session;
-using Ballware.Generic.Client;
-using Ballware.Meta.Client;
-using Ballware.Storage.Client;
-using Microsoft.AspNetCore.Authentication;
+using Ballware.Generic.Service.Client;
+using Ballware.Meta.Service.Client;
+using Ballware.Shared.Api;
+using Ballware.Shared.Api.Endpoints;
+using Ballware.Shared.Authorization.Jint;
+using Ballware.Shared.Data.Repository;
+using Ballware.Storage.Service.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -48,6 +56,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         CorsOptions? corsOptions = Configuration.GetSection("Cors").Get<CorsOptions>();
         AuthorizationOptions? authorizationOptions =
             Configuration.GetSection("Authorization").Get<AuthorizationOptions>();
+        StorageOptions? storageOptions = Configuration.GetSection("Storage").Get<StorageOptions>();
         SessionOptions? sessionOptions = Configuration.GetSection("Session").Get<SessionOptions>();
         MailOptions? mailOptions = Configuration.GetSection("Mail").Get<MailOptions>();
         TriggerOptions? triggerOptions = Configuration.GetSection("Trigger").Get<TriggerOptions>();
@@ -59,6 +68,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddOptionsWithValidateOnStart<AuthorizationOptions>()
             .Bind(Configuration.GetSection("Authorization"))
             .ValidateDataAnnotations();
+        
+        Services.AddOptionsWithValidateOnStart<StorageOptions>()
+            .Bind(Configuration.GetSection("Storage"))
+            .ValidateDataAnnotations();            
         
         Services.AddOptionsWithValidateOnStart<SessionOptions>()
             .Bind(Configuration.GetSection("Session"))
@@ -88,9 +101,16 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             .Bind(Configuration.GetSection("GenericClient"))
             .ValidateDataAnnotations();
 
-        if (authorizationOptions == null)
+        if (authorizationOptions == null || storageOptions == null)
         {
-            throw new ConfigurationException("Required configuration for authorization is missing");
+            throw new ConfigurationException("Required configuration for authorization or storage is missing");
+        }
+        
+        var validProviders = new[] { "mssql", "postgres" };
+        
+        if (!validProviders.Contains(storageOptions.Provider))
+        {
+            throw new ConfigurationException("Invalid storage provider specified. Valid providers are: " + string.Join(", ", validProviders));
         }
         
         if (mailOptions == null)
@@ -207,7 +227,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         });
         
         Services.AddBallwareSession(sessionOptions);
-        Services.AddBallwareDocumentAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
+        Services.AddBallwareSharedAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
         
         Services.AddHttpContextAccessor();
         
@@ -248,7 +268,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 client.Scope = genericClientOptions.Scopes;
             });
         
-        Services.AddHttpClient<BallwareMetaClient>(client =>
+        Services.AddHttpClient<MetaServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(metaClientOptions.ServiceUrl);
             })
@@ -263,7 +283,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 #endif                  
             .AddClientCredentialsTokenHandler("meta");
 
-        Services.AddHttpClient<BallwareStorageClient>(client =>
+        Services.AddHttpClient<StorageServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(storageClientOptions.ServiceUrl);
             })
@@ -280,7 +300,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 #endif            
             .AddClientCredentialsTokenHandler("storage");
         
-        Services.AddHttpClient<BallwareGenericClient>(client =>
+        Services.AddHttpClient<GenericServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(genericClientOptions.ServiceUrl);
             })
@@ -297,20 +317,53 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddAutoMapper(config =>
         {
+            config.AddBallwareDocumentStorageMappings();
             config.AddProfile<MetaServiceDocumentMetadataProfile>();
             config.AddProfile<GenericServiceDocumentMetadataProfile>();
         });
         
+        var storageConnectionStringIdentifier = storageOptions.ConnectionString;
+            
+        if (string.IsNullOrWhiteSpace(storageConnectionStringIdentifier))
+        {
+            throw new ConfigurationException("Storage connection string is not configured");
+        }
+            
+        var storageConnectionString = Configuration.GetConnectionString(storageConnectionStringIdentifier);
+            
+        if (string.IsNullOrWhiteSpace(storageConnectionString))
+        {
+            throw new ConfigurationException("Storage connection string is not found in configuration");
+        }
+        
+        if ("mssql".Equals(storageOptions.Provider, StringComparison.InvariantCultureIgnoreCase))
+        {
+            Services.AddBallwareDocumentStorageForSqlServer(storageOptions, storageConnectionString);    
+        } 
+        else if ("postgres".Equals(storageOptions.Provider, StringComparison.InvariantCultureIgnoreCase))
+        {
+            Services.AddBallwareDocumentStorageForPostgres(storageOptions, storageConnectionString);
+        }
+        
         Services.AddEndpointsApiExplorer();
 
-        Services.AddScoped<IDocumentMetadataProvider, MetaServiceDocumentMetadataProvider>();
-        Services.AddScoped<INotificationMetadataProvider, MetaServiceNotificationMetadataProvider>();
-        Services.AddScoped<ISubscriptionMetadataProvider, MetaServiceSubscriptionMetadataProvider>();
-        Services.AddScoped<IDocumentProcessingStateProvider, MetaServiceProcessingStateProvider>();
-        Services.AddScoped<IDocumentPickvalueProvider, MetaServicePickvalueProvider>();
-        Services.AddScoped<IMetaDatasourceProvider, MetaServiceDatasourceProvider>();
-        Services.AddScoped<IDocumentLookupProvider, GenericServiceLookupProvider>();
-        Services.AddScoped<ITenantDatasourceProvider, GenericServiceDatasourceProvider>();
+        Services.AddScoped<IDocumentMetadataProvider, DocumentMetadataProvider>();
+        Services.AddScoped<INotificationMetadataProvider, NotificationMetadataProvider>();
+        Services.AddScoped<ISubscriptionMetadataProvider, SubscriptionMetadataProvider>();
+        Services.AddScoped<IDocumentProcessingStateProvider, MetaServiceProvider>();
+        Services.AddScoped<IProcessingStateProvider, MetaServiceProvider>();
+        Services.AddScoped<IDocumentPickvalueProvider, MetaServiceProvider>();
+        Services.AddScoped<IMetaDatasourceProvider, MetaServiceProvider>();
+        Services.AddScoped<IDocumentLookupProvider, GenericServiceProvider>();
+        Services.AddScoped<ITenantDatasourceProvider, GenericServiceProvider>();
+        Services.AddScoped<ITenantableRepositoryHook<Data.Public.Document, Data.Persistables.Document>, DocumentImportExportRepositoryHook>();
+        Services.AddScoped<IAuthorizationMetadataProvider, MetaServiceProvider>();
+        Services.AddScoped<IFileStorageProvider, StorageServiceProvider>();
+        Services.AddScoped<IJobMetadataProvider, MetaServiceProvider>();
+        Services.AddScoped<IExportMetadataProvider, MetaServiceProvider>();
+
+        Services.AddBallwareSharedJintRightsChecker();
+        Services.AddBallwareSharedApiDependencies();
         
         Services.AddBallwareDevExpressReporting();
         
@@ -413,8 +466,18 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.MapControllers();
         app.MapRazorPages();
         app.MapSignOnEndpoint();
-        app.MapDocumentUserApi("document");
-        app.MapSubscriptionUserApi("subscription");
+        
+        app.MapDocumentUserApi("/document/document");
+        app.MapDocumentServiceApi("/document/document");
+        app.MapTenantableEditingApi<Data.Public.Document>("/document/document", "meta", "document", "Document", "Document", "documentApi", "document");
+        
+        app.MapNotificationUserApi("/document/notification");
+        app.MapNotificationServiceApi("/document/notification");
+        app.MapTenantableEditingApi<Data.Public.Notification>("/document/notification", "meta", "notification", "Notification", "Notification", "documentApi", "document");
+        
+        app.MapSubscriptionUserApi("/document/subscription");
+        app.MapSubscriptionServiceApi("/document/subscription");
+        app.MapTenantableEditingApi<Data.Public.Subscription>("/document/subscription", "meta", "subscription", "Subscription", "Subscription", "documentApi", "document");
         
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;

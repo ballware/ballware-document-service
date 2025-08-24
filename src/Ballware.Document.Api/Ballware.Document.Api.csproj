@@ -18,6 +18,8 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1" />
+        <PackageReference Include="ballware.shared.api.endpoints" Version="0.1.0" />
+        <PackageReference Include="ballware.shared.authorization" Version="0.1.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
         <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
@@ -27,7 +29,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data\Ballware.Document.Data.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
     </ItemGroup>
 
 </Project>

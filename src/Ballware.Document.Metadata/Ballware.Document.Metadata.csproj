@@ -6,4 +6,12 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Ballware.Shared.Authorization" Version="0.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ballware.Document.Data\Ballware.Document.Data.csproj" />
+    </ItemGroup>
+
 </Project>

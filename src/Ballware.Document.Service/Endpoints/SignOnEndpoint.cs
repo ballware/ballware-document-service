@@ -13,7 +13,8 @@ public static class SignOnEndpoint
 {
     public static IEndpointRouteBuilder MapSignOnEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/signon/{idToken}", HandleSignOnAsync);
+        app.MapGet("/signon/{idToken}", HandleSignOnAsync)
+            .ExcludeFromDescription();
 
         return app;
     }

@@ -10,6 +10,11 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1" />
+        <PackageReference Include="Ballware.Generic.Service.Client" Version="1.2.0" />
+        <PackageReference Include="Ballware.Meta.Service.Client" Version="1.2.0" />
+        <PackageReference Include="ballware.shared.authorization" Version="0.1.0" />
+        <PackageReference Include="Ballware.Shared.Authorization.Jint" Version="0.1.0" />
+        <PackageReference Include="Ballware.Storage.Service.Client" Version="9.3.0-alpha.1" />
         <PackageReference Include="Duende.AccessTokenManagement" Version="3.1.1" />
         <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="3.1.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
@@ -38,14 +43,13 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Ballware.Document.Api\Ballware.Document.Api.csproj" />
-      <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data.Ef.Postgres\Ballware.Document.Data.Ef.Postgres.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data.Ef.SqlServer\Ballware.Document.Data.Ef.SqlServer.csproj" />
+      <ProjectReference Include="..\Ballware.Document.Data.Ef\Ballware.Document.Data.Ef.csproj" />
       <ProjectReference Include="..\Ballware.Document.Engine.Dx\Ballware.Document.Engine.Dx.csproj" />
       <ProjectReference Include="..\Ballware.Document.Jobs\Ballware.Document.Jobs.csproj" />
       <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
       <ProjectReference Include="..\Ballware.Document.Session\Ballware.Document.Session.csproj" />
-      <ProjectReference Include="..\Ballware.Generic.Client\Ballware.Generic.Client.csproj" />
-      <ProjectReference Include="..\Ballware.Meta.Client\Ballware.Meta.Client.csproj" />
-      <ProjectReference Include="..\Ballware.Storage.Client\Ballware.Storage.Client.csproj" />
     </ItemGroup>
 
 </Project>

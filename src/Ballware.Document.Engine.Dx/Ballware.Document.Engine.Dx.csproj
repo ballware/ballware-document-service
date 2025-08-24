@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="ballware.shared.authorization" Version="0.1.0" />
       <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="24.2.7" />
       <PackageReference Include="DevExpress.Drawing" Version="24.2.7" />
       <PackageReference Include="DevExpress.Drawing.Skia" Version="24.2.7" />
@@ -25,7 +26,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Ballware.Document.Authorization\Ballware.Document.Authorization.csproj" />
       <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
     </ItemGroup>
 

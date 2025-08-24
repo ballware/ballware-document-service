@@ -1,5 +1,7 @@
 using Ballware.Document.Jobs.Configuration;
 using Ballware.Document.Jobs.Internal;
+using Ballware.Shared.Api.Jobs;
+using Ballware.Shared.Data.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.AspNetCore;
@@ -14,6 +16,12 @@ public static class ServiceCollectionExtensions
         
         services.AddQuartz(q =>
         {
+            var importJobName = "import";
+            
+            q.AddJob<TenantableImportJob<Data.Public.Document, ITenantableRepository<Data.Public.Document>>>(new JobKey(importJobName, "document"), configurator => configurator.StoreDurably());
+            q.AddJob<TenantableImportJob<Data.Public.Notification, ITenantableRepository<Data.Public.Notification>>>(new JobKey(importJobName, "notification"), configurator => configurator.StoreDurably());
+            q.AddJob<TenantableImportJob<Data.Public.Subscription, ITenantableRepository<Data.Public.Subscription>>>(new JobKey(importJobName, "subscription"), configurator => configurator.StoreDurably());
+            
             q.AddJob<DocumentUpdateDatasourcesJob>(DocumentUpdateDatasourcesJob.Key, configurator => configurator.StoreDurably());
             q.AddJob<SubscriptionTriggerJob>(SubscriptionTriggerJob.Key, configurator => configurator.StoreDurably());
             q.AddJob<SubscriptionFrequencyJob>(SubscriptionFrequencyJob.Key, configurator => configurator.StoreDurably());
