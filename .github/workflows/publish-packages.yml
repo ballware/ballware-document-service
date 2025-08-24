@@ -29,20 +29,26 @@ jobs:
         with:
           useConfigFile: true
       - name: Restore dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" \
             --name github \
             --username frankball \
-            --password ${{ secrets.GITHUB_TOKEN }} \
+            --password "$GITHUB_TOKEN" \
             --store-password-in-clear-text
           dotnet restore ballware-document-service.sln
       - name: Pack NuGet packages
+        env:
+          DEVEXPRESS_NUGETFEED: ${{ secrets.DEVEXPRESS_NUGETFEED }}
         run: |
-          dotnet restore ballware-document-service.sln -s https://api.nuget.org/v3/index.json -s "${{ secrets.DEVEXPRESS_NUGETFEED }}"
+          dotnet restore ballware-document-service.sln -s https://api.nuget.org/v3/index.json -s "$DEVEXPRESS_NUGETFEED"
           dotnet pack ballware-document-service.sln -p:Version=${{ env.GitVersion_SemVer }} --configuration Release --output ./nupkgs
       - name: Publish NuGet packages to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          dotnet nuget push ./nupkgs/*.nupkg --source https://nuget.pkg.github.com/ballware/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+          dotnet nuget push ./nupkgs/*.nupkg --source https://nuget.pkg.github.com/ballware/index.json --api-key "$GITHUB_TOKEN" --skip-duplicate
       - name: Create version tag on release
         if: github.ref == 'refs/heads/main'
         run: |
