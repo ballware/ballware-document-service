@@ -53,7 +53,7 @@ jobs:
           dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" \
             --name github \
             --username frankball \
-            --password $"GITHUB_TOKEN" \
+            --password "$GITHUB_TOKEN" \
             --store-password-in-clear-text
           dotnet nuget add source "$DEVEXPRESS_NUGETFEED" --name devexpress  
           dotnet restore ballware-document-service.sln
