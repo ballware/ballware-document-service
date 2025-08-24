@@ -50,8 +50,6 @@ COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
 COPY ./Ballware.Document.Service ./Ballware.Document.Service
 COPY ./Ballware.Document.Session ./Ballware.Document.Session
 
-RUN dotnet restore -s https://api.nuget.org/v3/index.json -s "$DEVEXPRESS_NUGETFEED" "Ballware.Document.Service/Ballware.Document.Service.csproj"
-
 WORKDIR "/src/Ballware.Document.Service"
 RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username frankball --password "$GITHUB_PAT" --store-password-in-clear-text
 RUN dotnet nuget add source "$DEVEXPRESS_NUGETFEED" --name devexpress
