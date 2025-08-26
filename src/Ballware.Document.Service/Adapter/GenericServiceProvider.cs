@@ -4,7 +4,7 @@ using Ballware.Generic.Service.Client;
 
 namespace Ballware.Document.Service.Adapter;
 
-public class GenericServiceProvider : ITenantDatasourceProvider, IDocumentLookupProvider
+public class GenericServiceProvider : IDatasourceDefinitionProvider, IDocumentLookupProvider
 {
     private IMapper Mapper { get; }
     private GenericServiceClient GenericClient { get; }

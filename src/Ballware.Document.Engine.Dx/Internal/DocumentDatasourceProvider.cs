@@ -7,21 +7,25 @@ namespace Ballware.Document.Engine.Dx.Internal;
 class DocumentDatasourceProvider : IDocumentDatasourceProvider
 {
     private IMetaDatasourceProvider MetaDatasourceProvider { get; }
-    private ITenantDatasourceProvider TenantDatasourceProvider { get; }
+    private IEnumerable<IDatasourceDefinitionProvider> DatasourceDefinitionProviders { get; }
     
-    public DocumentDatasourceProvider(IMetaDatasourceProvider metaDatasourceProvider, ITenantDatasourceProvider tenantDatasourceProvider)
+    public DocumentDatasourceProvider(IMetaDatasourceProvider metaDatasourceProvider, IEnumerable<IDatasourceDefinitionProvider> datasourceDefinitionProviders)
     {
         MetaDatasourceProvider = metaDatasourceProvider;
-        TenantDatasourceProvider = tenantDatasourceProvider;
+        DatasourceDefinitionProviders = datasourceDefinitionProviders;
     }   
     
     public IDictionary<string, object> CreateDatasourcesForTenant(Guid tenantId)
     {
-        var metaDatasourceDefinitions = MetaDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
-        var tenantDatasourceDefinitions = TenantDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
-
+        var datasourceDefinitions = new List<ReportDatasourceDefinition>();
+        
+        foreach (var datasourceDefinitionProvider in DatasourceDefinitionProviders)
+        {
+            datasourceDefinitions.AddRange(datasourceDefinitionProvider.DatasourceDefinitionsForTenant(tenantId));
+        }
+        
         var datasources =
-            CreateDatasourcesFromDefinitions(metaDatasourceDefinitions.Concat(tenantDatasourceDefinitions));
+            CreateDatasourcesFromDefinitions(datasourceDefinitions);
         
         return datasources;
     }

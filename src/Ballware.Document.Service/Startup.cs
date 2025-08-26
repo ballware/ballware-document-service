@@ -18,6 +18,7 @@ using Ballware.Document.Service.Mappings;
 using Ballware.Document.Session;
 using Ballware.Generic.Service.Client;
 using Ballware.Meta.Service.Client;
+using Ballware.Ml.Service.Client;
 using Ballware.Shared.Api;
 using Ballware.Shared.Api.Endpoints;
 using Ballware.Shared.Authorization.Jint;
@@ -64,6 +65,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         ServiceClientOptions? metaClientOptions = Configuration.GetSection("MetaClient").Get<ServiceClientOptions>();
         ServiceClientOptions? storageClientOptions = Configuration.GetSection("StorageClient").Get<ServiceClientOptions>();
         ServiceClientOptions? genericClientOptions = Configuration.GetSection("GenericClient").Get<ServiceClientOptions>();
+        ServiceClientOptions? mlClientOptions = Configuration.GetSection("MlClient").Get<ServiceClientOptions>();
         
         Services.AddOptionsWithValidateOnStart<AuthorizationOptions>()
             .Bind(Configuration.GetSection("Authorization"))
@@ -99,6 +101,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddOptionsWithValidateOnStart<ServiceClientOptions>()
             .Bind(Configuration.GetSection("GenericClient"))
+            .ValidateDataAnnotations();
+        
+        Services.AddOptionsWithValidateOnStart<ServiceClientOptions>()
+            .Bind(Configuration.GetSection("MlClient"))
             .ValidateDataAnnotations();
 
         if (authorizationOptions == null || storageOptions == null)
@@ -141,6 +147,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         if (genericClientOptions == null)
         {
             throw new ConfigurationException("Required configuration for genericClient is missing");
+        }
+        
+        if (mlClientOptions == null)
+        {
+            throw new ConfigurationException("Required configuration for mlClient is missing");
         }
 
         services.Configure<FormOptions>(x =>
@@ -266,6 +277,15 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 client.ClientSecret = genericClientOptions.ClientSecret;
 
                 client.Scope = genericClientOptions.Scopes;
+            })
+            .AddClient("ml", client =>
+            {
+                client.TokenEndpoint = mlClientOptions.TokenEndpoint;
+
+                client.ClientId = mlClientOptions.ClientId;
+                client.ClientSecret = mlClientOptions.ClientSecret;
+
+                client.Scope = mlClientOptions.Scopes;
             });
         
         Services.AddHttpClient<MetaServiceClient>(client =>
@@ -315,11 +335,27 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 #endif                        
             .AddClientCredentialsTokenHandler("generic");
         
+        Services.AddHttpClient<MlServiceClient>(client =>
+            {
+                client.BaseAddress = new Uri(mlClientOptions.ServiceUrl);
+            })
+#if DEBUG     
+// SonarQube: Disable S4830 - Accepting any server certificate is intended here for debug purposes
+#pragma warning disable S4830
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            })
+#pragma warning restore S4830             
+#endif                        
+            .AddClientCredentialsTokenHandler("ml");
+        
         Services.AddAutoMapper(config =>
         {
             config.AddBallwareDocumentStorageMappings();
             config.AddProfile<MetaServiceDocumentMetadataProfile>();
             config.AddProfile<GenericServiceDocumentMetadataProfile>();
+            config.AddProfile<MlServiceDocumentMetadataProfile>();
         });
         
         var storageConnectionStringIdentifier = storageOptions.ConnectionString;
@@ -355,12 +391,15 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddScoped<IDocumentPickvalueProvider, MetaServiceProvider>();
         Services.AddScoped<IMetaDatasourceProvider, MetaServiceProvider>();
         Services.AddScoped<IDocumentLookupProvider, GenericServiceProvider>();
-        Services.AddScoped<ITenantDatasourceProvider, GenericServiceProvider>();
         Services.AddScoped<ITenantableRepositoryHook<Data.Public.Document, Data.Persistables.Document>, DocumentImportExportRepositoryHook>();
         Services.AddScoped<IAuthorizationMetadataProvider, MetaServiceProvider>();
         Services.AddScoped<IFileStorageProvider, StorageServiceProvider>();
         Services.AddScoped<IJobMetadataProvider, MetaServiceProvider>();
         Services.AddScoped<IExportMetadataProvider, MetaServiceProvider>();
+        
+        Services.AddScoped<IDatasourceDefinitionProvider, GenericServiceProvider>();
+        Services.AddScoped<IDatasourceDefinitionProvider, MetaServiceProvider>();
+        Services.AddScoped<IDatasourceDefinitionProvider, MlServiceProvider>();
 
         Services.AddBallwareSharedJintRightsChecker();
         Services.AddBallwareSharedApiDependencies();

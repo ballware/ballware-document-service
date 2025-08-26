@@ -9,7 +9,7 @@ using Ballware.Shared.Authorization;
 
 namespace Ballware.Document.Service.Adapter;
 
-public class MetaServiceProvider : IAuthorizationMetadataProvider, IMetaDatasourceProvider, IExportMetadataProvider, IJobMetadataProvider, IDocumentPickvalueProvider, IDocumentProcessingStateProvider, IProcessingStateProvider
+public class MetaServiceProvider : IAuthorizationMetadataProvider, IDatasourceDefinitionProvider, IMetaDatasourceProvider, IExportMetadataProvider, IJobMetadataProvider, IDocumentPickvalueProvider, IDocumentProcessingStateProvider, IProcessingStateProvider
 {
     private const string DocumentLookupsDatasourceIdentifier = "DocumentLookups";
     
