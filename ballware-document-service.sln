@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Data.Ef.P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Data.Ef.SqlServer.Tests", "test\Ballware.Document.Data.Ef.SqlServer.Tests\Ballware.Document.Data.Ef.SqlServer.Tests.csproj", "{90CE85F3-FFAE-4364-B907-555E27604092}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballware.Document.Api.Tests", "test\Ballware.Document.Api.Tests\Ballware.Document.Api.Tests.csproj", "{7C99F94A-5F43-493B-882E-1DDF5FB88701}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,5 +80,9 @@ Global
 		{90CE85F3-FFAE-4364-B907-555E27604092}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90CE85F3-FFAE-4364-B907-555E27604092}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90CE85F3-FFAE-4364-B907-555E27604092}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C99F94A-5F43-493B-882E-1DDF5FB88701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C99F94A-5F43-493B-882E-1DDF5FB88701}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C99F94A-5F43-493B-882E-1DDF5FB88701}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C99F94A-5F43-493B-882E-1DDF5FB88701}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
