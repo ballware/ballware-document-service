@@ -518,6 +518,8 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.MapSubscriptionServiceApi("/document/subscription");
         app.MapTenantableEditingApi<Data.Public.Subscription>("/document/subscription", "meta", "subscription", "Subscription", "Subscription", "documentApi", "document");
         
+        app.MapProcessingStateDocumentApi("/document/processingstate");
+        
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;
 
