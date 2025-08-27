@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS base
 
+ARG GITHUB_PAT
 ARG DEVEXPRESS_NUGETFEED
 RUN [ -z "$DEVEXPRESS_NUGETFEED" ] && echo "DEVEXPRESS_NUGETFEED needs to be defined" && exit 1 || true
 
@@ -24,6 +25,7 @@ RUN echo "deb https://httpredir.debian.org/debian bookworm main contrib" > /etc/
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 
+ARG GITHUB_PAT
 ARG DEVEXPRESS_NUGETFEED
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -38,19 +40,20 @@ RUN node -v \
 WORKDIR /src
 
 COPY ./Ballware.Document.Api ./Ballware.Document.Api
-COPY ./Ballware.Document.Authorization ./Ballware.Document.Authorization
+COPY ./Ballware.Document.Data ./Ballware.Document.Data
+COPY ./Ballware.Document.Data.Ef ./Ballware.Document.Data.Ef
+COPY ./Ballware.Document.Data.Ef.Postgres ./Ballware.Document.Data.Ef.Postgres
+COPY ./Ballware.Document.Data.Ef.SqlServer ./Ballware.Document.Data.Ef.SqlServer
 COPY ./Ballware.Document.Engine.Dx ./Ballware.Document.Engine.Dx
 COPY ./Ballware.Document.Jobs ./Ballware.Document.Jobs
 COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
 COPY ./Ballware.Document.Service ./Ballware.Document.Service
 COPY ./Ballware.Document.Session ./Ballware.Document.Session
-COPY ./Ballware.Meta.Client ./Ballware.Meta.Client
-COPY ./Ballware.Generic.Client ./Ballware.Generic.Client
-COPY ./Ballware.Storage.Client ./Ballware.Storage.Client
-
-RUN dotnet restore -s https://api.nuget.org/v3/index.json -s "$DEVEXPRESS_NUGETFEED" "Ballware.Document.Service/Ballware.Document.Service.csproj"
 
 WORKDIR "/src/Ballware.Document.Service"
+RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username frankball --password "$GITHUB_PAT" --store-password-in-clear-text
+RUN dotnet nuget add source "$DEVEXPRESS_NUGETFEED" --name devexpress
+RUN dotnet restore "Ballware.Document.Service.csproj"
 RUN dotnet build "Ballware.Document.Service.csproj" -c Release -o /app/build
 
 FROM build AS publish

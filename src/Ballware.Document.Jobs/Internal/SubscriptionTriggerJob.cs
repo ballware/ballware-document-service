@@ -40,12 +40,7 @@ public class SubscriptionTriggerJob : IJob
             throw new ArgumentException($"Subscription {subscriptionId} for tenant {tenantId} unknown");
         }
         
-        if (subscription.NotificationId == null) 
-        {
-            throw new ArgumentException($"Subscription {subscriptionId} for tenant {tenantId} has no notification defined");
-        }
-        
-        var notification = await NotificationMetadataProvider.NotificationForTenantAndIdAsync(tenantId, subscription.NotificationId.Value);
+        var notification = await NotificationMetadataProvider.NotificationForTenantAndIdAsync(tenantId, subscription.NotificationId);
 
         if (notification == null)
         {
@@ -66,9 +61,9 @@ public class SubscriptionTriggerJob : IJob
 
         var documentParameters = new List<ReportParameter>();
 
-        if (!string.IsNullOrEmpty(notification.Params))
+        if (!string.IsNullOrEmpty(notification.DocumentParams))
         {
-            documentParameters = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ReportParameter>>(notification.Params);
+            documentParameters = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ReportParameter>>(notification.DocumentParams);
         }
         
         if (subscription.Mail != null)

@@ -7,6 +7,7 @@ namespace Ballware.Document.Engine.Dx.Controllers;
 
 [Route("api/DocumentViewer")]
 [Authorize(AuthenticationSchemes = "DistributedSession")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class WebDocumentViewerController : DevExpress.AspNetCore.Reporting.WebDocumentViewer.WebDocumentViewerController
 {
     public WebDocumentViewerController(IWebDocumentViewerMvcControllerService controllerService) : base(

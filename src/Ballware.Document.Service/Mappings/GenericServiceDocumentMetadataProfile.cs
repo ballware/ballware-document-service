@@ -7,8 +7,8 @@ public class GenericServiceDocumentMetadataProfile : Profile
 {
     public GenericServiceDocumentMetadataProfile()
     {
-        CreateMap<Ballware.Generic.Client.ReportDatasourceDefinition, ReportDatasourceDefinition>();
-        CreateMap<Ballware.Generic.Client.ReportDatasourceTable, ReportDatasourceTable>();
-        CreateMap<Ballware.Generic.Client.ReportDatasourceRelation, ReportDatasourceRelation>();
+        CreateMap<Ballware.Generic.Service.Client.ReportDatasourceDefinition, ReportDatasourceDefinition>();
+        CreateMap<Ballware.Generic.Service.Client.ReportDatasourceTable, ReportDatasourceTable>();
+        CreateMap<Ballware.Generic.Service.Client.ReportDatasourceRelation, ReportDatasourceRelation>();
     }
 }

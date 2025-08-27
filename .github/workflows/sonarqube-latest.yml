@@ -35,20 +35,35 @@ jobs:
         run: dotnet tool install --global dotnet-sonarscanner
         
       - name: Start SonarQube scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: | 
           dotnet sonarscanner begin \
             /k:"ballware_ballware-document-service" \
             /o:"ballware" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.dotcover.reportsPaths="coverage.html"
-        
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.dotcover.reportsPaths="coverage.html" \
+            /d:sonar.exclusions="**/Migrations/**/*"
+          
       - name: Restore dependencies
-        run: dotnet restore ballware-document-service.sln -s https://api.nuget.org/v3/index.json -s "${{ secrets.DEVEXPRESS_NUGETFEED }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEVEXPRESS_NUGETFEED: ${{ secrets.DEVEXPRESS_NUGETFEED }}
+        run: | 
+          dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" \
+            --name github \
+            --username frankball \
+            --password "$GITHUB_TOKEN" \
+            --store-password-in-clear-text
+          dotnet nuget add source "$DEVEXPRESS_NUGETFEED" --name devexpress  
+          dotnet restore ballware-document-service.sln
         
       - name: Build solution
         run: dotnet build ballware-document-service.sln --no-incremental --configuration Release
 
       - name: Run coverage for all test projects
+        env: 
+          "TestSettings__DatabasePassword": ${{ secrets.TEST_DOCUMENT_PASSWORD }}          
         run: |
           mkdir -p coverage
           i=0
@@ -77,4 +92,6 @@ jobs:
             --reportType=HTML           
         
       - name: End SonarQube scan
-        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}" 
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN" 

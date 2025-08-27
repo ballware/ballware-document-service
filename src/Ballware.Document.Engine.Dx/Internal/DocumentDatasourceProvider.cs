@@ -7,21 +7,25 @@ namespace Ballware.Document.Engine.Dx.Internal;
 class DocumentDatasourceProvider : IDocumentDatasourceProvider
 {
     private IMetaDatasourceProvider MetaDatasourceProvider { get; }
-    private ITenantDatasourceProvider TenantDatasourceProvider { get; }
+    private IEnumerable<IDatasourceDefinitionProvider> DatasourceDefinitionProviders { get; }
     
-    public DocumentDatasourceProvider(IMetaDatasourceProvider metaDatasourceProvider, ITenantDatasourceProvider tenantDatasourceProvider)
+    public DocumentDatasourceProvider(IMetaDatasourceProvider metaDatasourceProvider, IEnumerable<IDatasourceDefinitionProvider> datasourceDefinitionProviders)
     {
         MetaDatasourceProvider = metaDatasourceProvider;
-        TenantDatasourceProvider = tenantDatasourceProvider;
+        DatasourceDefinitionProviders = datasourceDefinitionProviders;
     }   
     
     public IDictionary<string, object> CreateDatasourcesForTenant(Guid tenantId)
     {
-        var metaDatasourceDefinitions = MetaDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
-        var tenantDatasourceDefinitions = TenantDatasourceProvider.DatasourceDefinitionsForTenant(tenantId);
-
+        var datasourceDefinitions = new List<ReportDatasourceDefinition>();
+        
+        foreach (var datasourceDefinitionProvider in DatasourceDefinitionProviders)
+        {
+            datasourceDefinitions.AddRange(datasourceDefinitionProvider.DatasourceDefinitionsForTenant(tenantId));
+        }
+        
         var datasources =
-            CreateDatasourcesFromDefinitions(metaDatasourceDefinitions.Concat(tenantDatasourceDefinitions));
+            CreateDatasourcesFromDefinitions(datasourceDefinitions);
         
         return datasources;
     }
@@ -34,7 +38,21 @@ class DocumentDatasourceProvider : IDocumentDatasourceProvider
                      .Where(definition => !string.IsNullOrEmpty(definition.ConnectionString) 
                                           && !string.IsNullOrEmpty(definition.Name)))
         {
-            var datasource = new SqlDataSource(new CustomStringConnectionParameters(schemaDefinition.ConnectionString))
+            string connectionString;
+            
+            if ("postgres".Equals(schemaDefinition.Provider, StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString = "XpoProvider=Postgres;" + schemaDefinition.ConnectionString;
+            } 
+            else if ("mssql".Equals(schemaDefinition.Provider, StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString = "XpoProvider=MSSqlServer;" + schemaDefinition.ConnectionString;
+            } else
+            {
+                connectionString = schemaDefinition.ConnectionString;           
+            }
+            
+            var datasource = new SqlDataSource(new CustomStringConnectionParameters(connectionString))
             {
                 Name = schemaDefinition.Name
             };

@@ -7,15 +7,19 @@ public class MetaServiceDocumentMetadataProfile : Profile
 {
     public MetaServiceDocumentMetadataProfile()
     {
-        CreateMap<Ballware.Meta.Client.ServiceTenantReportDatasourceDefinition, ReportDatasourceDefinition>();
-        CreateMap<Ballware.Meta.Client.ServiceTenantReportDatasourceTable, ReportDatasourceTable>();
+        CreateMap<Ballware.Meta.Service.Client.ServiceTenantReportDatasourceDefinition, ReportDatasourceDefinition>();
+        CreateMap<Ballware.Meta.Service.Client.ServiceTenantReportDatasourceTable, ReportDatasourceTable>();
 
-        CreateMap<Ballware.Meta.Client.TenantSelectListEntry, TenantListEntry>();
+        CreateMap<Ballware.Meta.Service.Client.ServiceEntity, EntityMetadata>()
+            .ForMember(dst => dst.RightsCheckScript, 
+                opt => opt.MapFrom(source => source.CustomScripts.ExtendedRightsCheck));
         
-        CreateMap<Ballware.Meta.Client.DocumentSelectListEntry, DocumentSelectEntry>()
-            .ForMember(dst => dst.DisplayName, opt => opt.MapFrom(src => src.Name));
+        CreateMap<Ballware.Meta.Service.Client.ServiceTenant, Tenant>();
+        CreateMap<Ballware.Meta.Service.Client.TenantSelectListEntry, TenantListEntry>();
 
-        CreateMap<Ballware.Meta.Client.Notification, Notification>();
-        CreateMap<Ballware.Meta.Client.Subscription, Subscription>();
+        CreateMap<Ballware.Shared.Api.Public.JobStates, Ballware.Meta.Service.Client.JobStates>();
+        CreateMap<Ballware.Meta.Service.Client.JobStates, Ballware.Shared.Api.Public.JobStates>();
+        
+        CreateMap<Ballware.Meta.Service.Client.ProcessingStateSelectListEntry, ProcessingStateSelectListEntry>();
     }
 }
