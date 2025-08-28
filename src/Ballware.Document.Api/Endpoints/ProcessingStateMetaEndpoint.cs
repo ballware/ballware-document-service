@@ -92,7 +92,7 @@ public static class ProcessingStateMetaEndpoint
         var rights = principalUtils.GetUserRights(user);
 
         var entityMeta =
-            await authorizationMetadataProvider.MetadataForEntityByTenantAndIdentifierAsync(tenantId, "notifiction");
+            await authorizationMetadataProvider.MetadataForEntityByTenantAndIdentifierAsync(tenantId, "notification");
 
         if (entityMeta == null)
         {
