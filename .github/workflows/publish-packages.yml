@@ -6,27 +6,33 @@ on:
       - develop
 
 jobs:
-  publish:
+  build_and_pack:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:8.0
+    outputs:
+      semver: ${{ steps.gitversion.outputs.SemVer }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version:
-            8.0   
+          fetch-depth: 0      
+      - name: Fix workspace ownership (container)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          chown -R $(id -u):$(id -g) "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"          
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@b82e662a7199df56ac962118e506d9efb9830f82 # v4.1.0
         with:
-          versionSpec: '6.3.x'
+          versionSpec: '6.3.x'          
+      - name: Ensure tool manifest exists & install local tools
+        run: |
+          dotnet new tool-manifest || true
+          dotnet tool update Swashbuckle.AspNetCore.Cli --version 7.2.0
+          dotnet tool update Nswag.ConsoleCore
       - name: Fetch GitVersion
+        id: gitversion
         uses: gittools/actions/gitversion/execute@b82e662a7199df56ac962118e506d9efb9830f82 # v4.1.0
       - name: Restore dependencies
         env:
@@ -35,12 +41,15 @@ jobs:
         run: |
           dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" \
             --name github \
-            --username frankball \
+            --username "${{ github.actor }}" \
             --password "$GITHUB_TOKEN" \
             --store-password-in-clear-text
           dotnet nuget add source "$DEVEXPRESS_NUGETFEED" \
             --name devexpress
           dotnet restore ballware-document-service.sln
+      - name: Build solution
+        run: |
+          dotnet build ballware-document-service.sln -p:Version=${{ env.GitVersion_SemVer }} --configuration Release   
       - name: Pack NuGet packages
         run: |
           dotnet pack ballware-document-service.sln -p:Version=${{ env.GitVersion_SemVer }} --configuration Release --output ./nupkgs
@@ -56,9 +65,17 @@ jobs:
           git config user.email "github-actions@github.com"
           git tag v${{ env.GitVersion_SemVer }}
           git push origin refs/tags/v${{ env.GitVersion_SemVer }} refs/heads/main
+  docker_publish:          
+    needs: build_and_pack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set environment variables for Docker tags
         run: |
-          echo "DOCKER_TAG=${{ env.GitVersion_SemVer }}" >> $GITHUB_ENV
+          echo "DOCKER_TAG=${{ needs.build_and_pack.outputs.semver }}" >> $GITHUB_ENV
           if [[ "${GITHUB_REF##*/}" == "main" ]]; then
             echo "DOCKER_TAG2=stable" >> $GITHUB_ENV
           else
@@ -84,6 +101,7 @@ jobs:
           file: src/Ballware.Document.Service/Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
+            GITHUB_USERNAME=${{ github.actor }}
             GITHUB_PAT=${{ secrets.GITHUB_TOKEN }}
             DEVEXPRESS_NUGETFEED=${{ secrets.DEVEXPRESS_NUGETFEED }}
           push: true
