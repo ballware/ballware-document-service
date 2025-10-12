@@ -239,7 +239,8 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddBallwareSession(sessionOptions);
         Services.AddBallwareSharedAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
-        
+
+        Services.AddAntiforgery();
         Services.AddHttpContextAccessor();
         
         Services.AddMvcCore()
@@ -491,6 +492,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseAntiforgery();
         app.UseStaticFiles();
         
         app.Use(async (context, next) =>
@@ -502,8 +504,9 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         app.UseBallwareDevExpressReporting();
 
+        app.MapBallwareDevExpressReporting();
+        
         app.MapControllers();
-        app.MapRazorPages();
         app.MapSignOnEndpoint();
         
         app.MapDocumentUserApi("/document/document");

@@ -5,7 +5,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RazorClassLibrary>true</RazorClassLibrary>
-        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
         <EnableDefaultEmbeddedStaticWebAssets>true</EnableDefaultEmbeddedStaticWebAssets>
         <StaticWebAssetBasePath>dx</StaticWebAssetBasePath>
     </PropertyGroup>
@@ -16,11 +15,14 @@
 
     <ItemGroup>
       <PackageReference Include="ballware.shared.authorization" Version="0.1.0" />
-      <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Drawing" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Drawing.Skia" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Pdf.SkiaRenderer" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Web.Reporting.Common" Version="24.2.7" />
+      <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="25.1.5" />
+      <PackageReference Include="DevExpress.Blazor.Reporting.JSBasedControls" Version="25.1.5" />
+      <PackageReference Include="DevExpress.Blazor.Reporting.Viewer" Version="25.1.5" />
+      <PackageReference Include="DevExpress.Drawing" Version="25.1.5" />
+      <PackageReference Include="DevExpress.Drawing.Skia" Version="25.1.5" />
+      <PackageReference Include="DevExpress.Pdf.SkiaRenderer" Version="25.1.5" />
+      <PackageReference Include="DevExpress.Web.Reporting.Common" Version="25.1.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.20" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
       <PackageReference Include="Quartz" Version="3.8.1" />
     </ItemGroup>
@@ -30,27 +32,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\" />
-      <Folder Include="wwwroot\dist\" />
+      <AdditionalFiles Include="App.razor" />
+      <AdditionalFiles Include="Components\_Imports.razor" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Update="package.json">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Content>
-      <Content Update="package-lock.json">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
-    <Target Name="NpmInstall" BeforeTargets="Build">
-        <Message Text="Running 'npm install'..." Importance="high" />
-        <Exec Command="npm install" WorkingDirectory="$(ProjectDir)" />
-    </Target>
-
-    <Target Name="WebpackBuild" AfterTargets="Build">
-        <Message Text="Running 'webpack'..." Importance="high" />
-        <Exec Command="npx webpack --mode production" WorkingDirectory="$(ProjectDir)" />
-    </Target>
-    
 </Project>

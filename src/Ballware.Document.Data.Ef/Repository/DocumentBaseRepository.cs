@@ -18,6 +18,13 @@ public abstract class DocumentBaseRepository : TenantableBaseRepository<Public.D
         DocumentDbContext = dbContext;
     }
 
+    public virtual Public.Document? MetadataByTenantAndId(Guid tenantId, Guid id)
+    {
+        var result = DocumentDbContext.Documents.SingleOrDefault(d => d.TenantId == tenantId && d.Uuid == id);
+
+        return result != null ? Mapper.Map<Public.Document>(result) : null;
+    }
+    
     public virtual async Task<Public.Document?> MetadataByTenantAndIdAsync(Guid tenantId, Guid id)
     {
         var result = await DocumentDbContext.Documents.SingleOrDefaultAsync(d => d.TenantId == tenantId && d.Uuid == id);

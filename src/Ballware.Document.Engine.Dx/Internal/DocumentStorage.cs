@@ -260,7 +260,7 @@ public class DocumentStorage : ReportStorageWebExtension
 
     private static byte[] LoadPrintDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId, IEnumerable<Guid> ids)
     {
-       var reportBinary = metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId).GetAwaiter().GetResult();
+       var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId, documentId);
         
         XtraReport report = new XtraReport();
 
@@ -291,7 +291,7 @@ public class DocumentStorage : ReportStorageWebExtension
 
     private static byte[] LoadSingleDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId)
     {
-        var reportBinary = metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId).GetAwaiter().GetResult();
+        var reportBinary = metaProvider.DocumentBinaryForTenantAndId(tenantId, documentId);
 
         XtraReport report = new XtraReport();
 

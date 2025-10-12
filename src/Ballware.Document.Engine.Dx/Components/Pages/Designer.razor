@@ -1,0 +1,54 @@
+@using Ballware.Shared.Authorization
+@using Microsoft.AspNetCore.Authorization
+
+@page "/designer"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject NavigationManager Navigation
+@inject IPrincipalUtils PrincipalUtils
+@inject IDocumentDatasourceProvider DatasourceProvider
+
+<DxReportDesigner ReportName="@ReportName" DataSources="DataSources">
+    <DxReportDesignerDataSourceSettings 
+        AllowAddDataSource="@AllowAddDataSource" 
+        AllowEditDataSource="@AllowEditDataSource" 
+        AllowRemoveDataSource="@AllowRemoveDataSource">
+    </DxReportDesignerDataSourceSettings>
+    
+</DxReportDesigner>
+
+@code {
+    [CascadingParameter] 
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    
+    private string? ReportName { get; set; }
+
+    private Dictionary<string, object>? DataSources;
+    
+    private bool AllowAddDataSource { get; set; }
+    private bool AllowEditDataSource { get; set; }
+    private bool AllowRemoveDataSource { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var user = (await AuthenticationStateTask)?.User;
+        var tenantId = PrincipalUtils.GetUserTenandId(user);
+        var rights = PrincipalUtils.GetUserRights(user).ToList();
+        
+        AllowAddDataSource = rights.Contains("meta.document.edit");
+        AllowEditDataSource = rights.Contains("meta.document.edit");
+        AllowRemoveDataSource = rights.Contains("meta.document.edit");
+
+        DataSources = DatasourceProvider.CreateDatasourcesForTenant(tenantId);
+    }
+
+    protected override void OnParametersSet()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+
+        ReportName = uri.Query;
+    }
+}

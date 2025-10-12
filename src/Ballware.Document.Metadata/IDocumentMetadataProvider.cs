@@ -4,6 +4,7 @@ namespace Ballware.Document.Metadata;
 
 public interface IDocumentMetadataProvider
 {
+    byte[] DocumentBinaryForTenantAndId(Guid tenantId, Guid documentId);
     Task<byte[]> DocumentBinaryForTenantAndIdAsync(Guid tenantId, Guid documentId);
     
     Task<IEnumerable<DocumentSelectListEntry>> DocumentsForTenantAsync(Guid tenantId);

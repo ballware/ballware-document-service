@@ -18,7 +18,7 @@ public static class OpenIdConnectOptionsExtensions
             {
                 var httpContext = context.HttpContext;
                 var sessionOptions = httpContext.RequestServices.GetRequiredService<SessionOptions>();
-                var sessionProvider = httpContext.RequestServices.GetRequiredService<SessionPrincipalProvider>();
+                var sessionProvider = httpContext.RequestServices.GetRequiredService<ISessionPrincipalProvider>();
 
                 var principal = context.Principal!;
                 await sessionProvider.StorePrincipalAsync(httpContext, principal);

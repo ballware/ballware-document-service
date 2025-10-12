@@ -5,6 +5,7 @@ namespace Ballware.Document.Data.Repository;
 
 public interface IDocumentMetaRepository : ITenantableRepository<Public.Document>
 {
+    Public.Document? MetadataByTenantAndId(Guid tenantId, Guid id);
     Task<Public.Document?> MetadataByTenantAndIdAsync(Guid tenantId, Guid id);
 
     Task<IEnumerable<DocumentSelectListEntry>> SelectListForTenantAsync(Guid tenantId);

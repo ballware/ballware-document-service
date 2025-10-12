@@ -53,4 +53,9 @@
       <ProjectReference Include="..\Ballware.Document.Session\Ballware.Document.Session.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\Pages\Ping.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\_routes.razor" />
+    </ItemGroup>
+
 </Project>

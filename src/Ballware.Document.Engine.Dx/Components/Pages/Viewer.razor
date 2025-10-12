@@ -1,0 +1,22 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/viewer"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject NavigationManager Navigation
+
+<DxDocumentViewer ReportName="@ReportName">
+</DxDocumentViewer>
+
+@code {
+    [Parameter]
+    public string? ReportName { get; set; }
+    
+    protected override void OnParametersSet()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+
+        ReportName = uri.Query;
+    }
+}

@@ -20,6 +20,29 @@ public class DocumentMetadataProvider : IDocumentMetadataProvider
         StorageClient = storageClient;   
     }
     
+    public byte[] DocumentBinaryForTenantAndId(Guid tenantId, Guid documentId)
+    {
+        var document = Repository.MetadataByTenantAndId(tenantId, documentId);
+
+        if (document == null)
+        {
+            throw new InvalidOperationException($"Document with ID {documentId} not found for tenant {tenantId}.");
+        }
+        
+        var documentBinary = StorageClient.AttachmentDownloadForTenantEntityAndOwnerByFilename(tenantId, StorageDocumentEntity, documentId, StorageDocumentBinaryFilename);
+
+        if (documentBinary == null)
+        {
+            throw new InvalidOperationException($"Report binary attachment for ID {documentId} not found for tenant {tenantId}.");
+        }
+
+        using var stream = new MemoryStream();
+        
+        documentBinary.Stream.CopyTo(stream);
+        
+        return stream.ToArray();
+    }
+    
     public async Task<byte[]> DocumentBinaryForTenantAndIdAsync(Guid tenantId, Guid documentId)
     {
         var document = await Repository.MetadataByTenantAndIdAsync(tenantId, documentId);
