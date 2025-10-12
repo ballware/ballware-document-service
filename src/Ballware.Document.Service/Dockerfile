@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS base
 
+ARG GITHUB_USERNAME
 ARG GITHUB_PAT
 ARG DEVEXPRESS_NUGETFEED
 RUN [ -z "$DEVEXPRESS_NUGETFEED" ] && echo "DEVEXPRESS_NUGETFEED needs to be defined" && exit 1 || true
@@ -25,6 +26,7 @@ RUN echo "deb https://httpredir.debian.org/debian bookworm main contrib" > /etc/
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 
+ARG GITHUB_USERNAME
 ARG GITHUB_PAT
 ARG DEVEXPRESS_NUGETFEED
 
@@ -51,7 +53,7 @@ COPY ./Ballware.Document.Service ./Ballware.Document.Service
 COPY ./Ballware.Document.Session ./Ballware.Document.Session
 
 WORKDIR "/src/Ballware.Document.Service"
-RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username frankball --password "$GITHUB_PAT" --store-password-in-clear-text
+RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username "$GITHUB_USERNAME" --password "$GITHUB_PAT" --store-password-in-clear-text
 RUN dotnet nuget add source "$DEVEXPRESS_NUGETFEED" --name devexpress
 RUN dotnet restore "Ballware.Document.Service.csproj"
 RUN dotnet build "Ballware.Document.Service.csproj" -c Release -o /app/build
