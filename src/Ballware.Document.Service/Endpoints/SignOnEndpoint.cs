@@ -26,7 +26,7 @@ public static class SignOnEndpoint
         var handler = new JwtSecurityTokenHandler();
         var validationParameters = new TokenValidationParameters
         {
-            ValidIssuer = options.Value.Authority,
+            ValidIssuer = options.Value.Issuer,
             ValidAudience = options.Value.ClientId,
             IssuerSigningKeys = config.SigningKeys,
             ValidateLifetime = true,
