@@ -177,6 +177,8 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
                 options.Scope.Add(authorizationOptions.RequiredUserScope);
+                options.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
+                options.TokenValidationParameters.ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority;
                 
                 options.RegisterBallwareSessionTokenHandling();
             })
@@ -188,7 +190,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
                 options.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
                 {
-                    ValidIssuer = authorizationOptions.Authority
+                    ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority
                 };
             });
 
@@ -197,9 +199,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             var options = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
                 .Get(OpenIdConnectDefaults.AuthenticationScheme);
 
+            var retriever = new HttpDocumentRetriever { RequireHttps = authorizationOptions.RequireHttpsMetadata };
+            
             return new ConfigurationManager<OpenIdConnectConfiguration>(
                 options.Authority!.TrimEnd('/') + "/.well-known/openid-configuration",
-                new OpenIdConnectConfigurationRetriever());
+                new OpenIdConnectConfigurationRetriever(), retriever);
         });
 
         Services.AddAuthorizationBuilder()

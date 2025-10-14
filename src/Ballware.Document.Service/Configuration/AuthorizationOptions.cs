@@ -23,6 +23,8 @@ public class AuthorizationOptions
     [Required]
     public required string RightClaim { get; set; } = "right";
 
+    public string? Issuer { get; set; }
+    
     public bool RequireHttpsMetadata { get; set; } = true;
     
     [Required]
