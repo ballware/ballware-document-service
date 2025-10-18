@@ -3,6 +3,7 @@ using Quartz;
 
 namespace Ballware.Document.Jobs.Internal;
 
+[DisallowConcurrentExecution]
 public class SubscriptionFrequencyJob : IJob
 {
     public static readonly JobKey Key = new JobKey("frequency", "subscription");
