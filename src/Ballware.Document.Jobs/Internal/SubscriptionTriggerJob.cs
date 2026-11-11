@@ -5,6 +5,7 @@ using Quartz;
 
 namespace Ballware.Document.Jobs.Internal;
 
+[DisallowConcurrentExecution]
 public class SubscriptionTriggerJob : IJob
 {
     public static readonly JobKey Key = new JobKey("trigger", "subscription");
