@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
-using AutoMapper;
 using Ballware.Document.Api.Endpoints;
 using Ballware.Document.Api.Tests.Utils;
 using Ballware.Shared.Authorization;

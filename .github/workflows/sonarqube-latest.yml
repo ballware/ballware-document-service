@@ -28,7 +28,7 @@ jobs:
       - name: Start SonarQube scan
         run: | 
           dotnet sonarscanner begin \
-            /k:"ballware_ballware-generic-service" \
+            /k:"ballware_ballware-document-service" \
             /o:"ballware" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
@@ -41,6 +41,8 @@ jobs:
             --username ${{ github.actor }} \
             --password ${{ secrets.GITHUB_TOKEN }} \
             --store-password-in-clear-text
+          dotnet nuget add source "${{ secrets.DEVEXPRESS_NUGETFEED }}" \
+            --name devexpress
           dotnet restore ballware-document-service.sln         
           
       - name: Build solution

@@ -486,4 +486,7 @@ $RECYCLE.BIN/
 # Local app settings
 appsettings*.local.json
 
-**/wwwroot/dist/*
+# Local environment files
+*.local.env
+ballware-document-service.env
+

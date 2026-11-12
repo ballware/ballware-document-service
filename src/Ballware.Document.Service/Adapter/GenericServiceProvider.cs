@@ -1,4 +1,4 @@
-using AutoMapper;
+using MapsterMapper;
 using Ballware.Document.Metadata;
 using Ballware.Generic.Service.Client;
 
