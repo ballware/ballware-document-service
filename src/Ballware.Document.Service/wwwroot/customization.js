@@ -11,9 +11,9 @@ window.BallwareReportingCustomization = {
     customizeLocalization: function (s, e) {
         DevExpress.localization.locale('de');
 
-        window.BallwareReportingCustomization.loadLocalization(e, '/dx/Localization/dx-analytics-core.de.json');
-        window.BallwareReportingCustomization.loadLocalization(e, '/dx/Localization/dx-reporting.de.json');
-        window.BallwareReportingCustomization.loadLocalization(e, '/dx/Localization/dx-rich.de.json');
+        window.BallwareReportingCustomization.loadLocalization(e, new URL('dx/Localization/dx-analytics-core.de.json', document.baseURI).href);
+        window.BallwareReportingCustomization.loadLocalization(e, new URL('dx/Localization/dx-reporting.de.json', document.baseURI).href);
+        window.BallwareReportingCustomization.loadLocalization(e, new URL('dx/Localization/dx-rich.de.json', document.baseURI).href);
     },
     customizeMenuActions: function (s, e) {
         var hiddenActionIds = [

@@ -26,17 +26,37 @@ public static class ReverseProxyExtensions
 
         return app.Use((context, next) =>
         {
-            if (context.Request.Path.StartsWithSegments(pathPrefix, out var remainingPath)
-                && !IsApiPath(remainingPath))
+            var requestPath = context.Request.Path;
+
+            if (context.Request.PathBase != PathString.Empty || IsApiPath(requestPath))
             {
-                context.Request.PathBase = context.Request.PathBase.Add(pathPrefix);
-                context.Request.Path = remainingPath;
+                return next();
             }
+
+            if (requestPath.StartsWithSegments(pathPrefix, out var remainingPath))
+            {
+                // Der Gateway leitet den Prefix unverändert weiter: er wird aus dem Pfad abgebaut.
+                if (IsApiPath(remainingPath))
+                {
+                    return next();
+                }
+
+                context.Request.PathBase = pathPrefix;
+                context.Request.Path = remainingPath;
+
+                return next();
+            }
+
+            // Der Gateway hat den Prefix bereits abgebaut, sodass er der Anwendung nicht mehr
+            // bekannt ist. Ohne PathBase erzeugten die Komponenten absolute Ressourcen-URLs
+            // ohne Prefix (NavigationManager.BaseUri), z. B. die DevExpress-Report-Stylesheets,
+            // und das Gateway beantwortete sie nicht.
+            context.Request.PathBase = pathPrefix;
 
             return next();
         });
     }
 
-    private static bool IsApiPath(PathString remainingPath) =>
-        Array.Exists(ApiPathPrefixes, apiPathPrefix => remainingPath.StartsWithSegments(apiPathPrefix));
+    private static bool IsApiPath(PathString path) =>
+        Array.Exists(ApiPathPrefixes, apiPathPrefix => path.StartsWithSegments(apiPathPrefix));
 }

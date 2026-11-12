@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -65,7 +66,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         if (!string.IsNullOrWhiteSpace(configured))
         {
-            return configured.Trim();
+            return NormalizeFrameAncestorsPolicy(configured.Trim());
         }
 
         var allowedOrigins = configuration.GetSection("Cors").Get<CorsOptions>()?.AllowedOrigins ?? string.Empty;
@@ -75,19 +76,40 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         if (origins.Length == 0)
         {
-            return "self";
+            return "'self'";
         }
 
         if (Array.Exists(origins, origin => origin == "*"))
         {
-            return "self *";
+            return "'self' *";
         }
 
-        return "self " + string.Join(' ', origins);
+        return "'self' " + string.Join(' ', origins);
+    }
+
+    private static string NormalizeFrameAncestorsPolicy(string policy)
+    {
+        if (string.Equals(policy, "self", StringComparison.OrdinalIgnoreCase))
+        {
+            return "'self'";
+        }
+
+        if (string.Equals(policy, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            return "'none'";
+        }
+
+        if (policy.StartsWith("self ", StringComparison.OrdinalIgnoreCase))
+        {
+            return "'self' " + policy.Substring(5);
+        }
+
+        return policy;
     }
 
     private bool FramingFromForeignOriginsAllowed =>
-        !string.Equals(FrameAncestorsPolicy, "self", StringComparison.OrdinalIgnoreCase);
+        !string.Equals(FrameAncestorsPolicy, "'self'", StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(FrameAncestorsPolicy, "'none'", StringComparison.OrdinalIgnoreCase);
 
     public void InitializeServices()
     {   
@@ -202,6 +224,17 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         Services.AddMemoryCache();
         Services.AddDistributedMemoryCache();
+
+        var dataProtection = Services.AddDataProtection();
+
+        dataProtection.SetApplicationName("ballware-document-service");
+
+        var dataProtectionKeysPath = Configuration["DataProtection:KeysPath"];
+
+        if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+        {
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+        }
         
         Services.AddAuthentication(options =>
             {
@@ -292,8 +325,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         Services.AddControllers();
 
+        var detailedErrors = Configuration.GetValue<bool?>("DetailedErrors") ?? Environment.IsDevelopment();
+
         Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+            .AddInteractiveServerComponents(options => options.DetailedErrors = detailedErrors)
+            .AddHubOptions(options => options.MaximumReceiveMessageSize = 256 * 1024);
 
         Services.Configure<AntiforgeryOptions>(options =>
         {
@@ -301,6 +337,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             // iframe-Einbettung in das Ballware-Frontend blockieren. Gerahmt wird über die CSP
             // frame-ancestors-Richtlinie der Razor-Komponenten-Endpoints gesteuert.
             options.SuppressXFrameOptionsHeader = FramingFromForeignOriginsAllowed;
+            options.Cookie.Name = ".Ballware.Antiforgery";
         });
         
         Services.Configure<QuartzOptions>(Configuration.GetSection("Quartz"));

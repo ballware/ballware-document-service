@@ -4,13 +4,14 @@ namespace Ballware.Document.Service.Configuration;
 
 public class ReverseProxyOptions
 {
-    // Der vorgeschaltete Reverse-Proxy (https://api.ballware.de) leitet ausschließlich die Pfade
-    // /signon, /designer, /viewer und /document an den Document-Service weiter. Die Client-
-    // Ressourcen des Blazor-Anteils (_framework, _content, wwwroot-Dateien) werden ohne Prefix
-    // angefordert und führen dann zu 401-Antworten des Gateways. Über das Prefix werden sie auf
-    // denselben Pfad gelegt wie die Api-Endpunkte. Ein leeres Prefix schaltet das Verhalten ab.
+    // Der vorgeschaltete Reverse-Proxy (https://api.ballware.de) leitet für den Blazor-Anteil nur
+    // Prefix-URLs weiter, die Client-Ressourcen (/assets/document/...) liegen also über einen
+    // gemeinsamen Prefix. Die Anwendung mappt ihre Ressourcen ohne Prefix und beantwortet sie über
+    // das PathBase, unabhängig davon, ob das Gateway den Prefix mitliefert oder vorher abbaut.
+    // Ohne PathBase erzeugten die Komponenten absolute Ressourcen-URLs ohne Prefix und das Gateway
+    // antwortete mit 401. Ein leeres Prefix schaltet das Verhalten ab.
     [RegularExpression(@"^$|^(/[A-Za-z0-9._\-]+)+$", ErrorMessage = "PathPrefix must be empty or an absolute path")]
-    public string PathPrefix { get; set; } = "/document";
+    public string PathPrefix { get; set; } = "/assets/document";
 
     public string BaseHref =>
         string.IsNullOrEmpty(PathPrefix) ? "/" : PathPrefix.TrimEnd('/') + "/";
