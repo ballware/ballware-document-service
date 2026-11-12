@@ -11,6 +11,7 @@ using Ballware.Document.Jobs;
 using Ballware.Document.Jobs.Configuration;
 using Ballware.Document.Metadata;
 using Ballware.Document.Service.Adapter;
+using Ballware.Document.Service.Components;
 using Ballware.Document.Service.Configuration;
 using Ballware.Document.Service.Endpoints;
 using Ballware.Document.Service.Extensions;
@@ -24,6 +25,10 @@ using Ballware.Shared.Api.Endpoints;
 using Ballware.Shared.Authorization.Jint;
 using Ballware.Shared.Data.Repository;
 using Ballware.Storage.Service.Client;
+using Duende.AccessTokenManagement;
+using Mapster;
+using MapsterMapper;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -35,7 +40,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Quartz;
 using CorsOptions = Ballware.Document.Service.Configuration.CorsOptions;
 using SwaggerOptions = Ballware.Document.Service.Configuration.SwaggerOptions;
@@ -51,6 +56,38 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
     private IWebHostEnvironment Environment { get; } = environment;
     private ConfigurationManager Configuration { get; } = configuration;
     private IServiceCollection Services { get; } = services;
+
+    private string FrameAncestorsPolicy { get; } = ResolveFrameAncestorsPolicy(configuration);
+
+    private static string ResolveFrameAncestorsPolicy(ConfigurationManager configuration)
+    {
+        var configured = configuration["ContentSecurity:FrameAncestors"];
+
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.Trim();
+        }
+
+        var allowedOrigins = configuration.GetSection("Cors").Get<CorsOptions>()?.AllowedOrigins ?? string.Empty;
+
+        var origins = allowedOrigins
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (origins.Length == 0)
+        {
+            return "self";
+        }
+
+        if (Array.Exists(origins, origin => origin == "*"))
+        {
+            return "self *";
+        }
+
+        return "self " + string.Join(' ', origins);
+    }
+
+    private bool FramingFromForeignOriginsAllowed =>
+        !string.Equals(FrameAncestorsPolicy, "self", StringComparison.OrdinalIgnoreCase);
 
     public void InitializeServices()
     {   
@@ -250,6 +287,17 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             .AddApiExplorer();
 
         Services.AddControllers();
+
+        Services.AddRazorComponents()
+            .AddInteractiveServerComponents();
+
+        Services.Configure<AntiforgeryOptions>(options =>
+        {
+            // Das Antiforgery-Middleware sendet sonst "X-Frame-Options: SAMEORIGIN" und würde die
+            // iframe-Einbettung in das Ballware-Frontend blockieren. Gerahmt wird über die CSP
+            // frame-ancestors-Richtlinie der Razor-Komponenten-Endpoints gesteuert.
+            options.SuppressXFrameOptionsHeader = FramingFromForeignOriginsAllowed;
+        });
         
         Services.Configure<QuartzOptions>(Configuration.GetSection("Quartz"));
         Services.AddBallwareDocumentBackgroundJobs(mailOptions, triggerOptions);
@@ -257,39 +305,39 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         Services.AddClientCredentialsTokenManagement()
             .AddClient("meta", client =>
             {
-                client.TokenEndpoint = metaClientOptions.TokenEndpoint;
+                client.TokenEndpoint = new Uri(metaClientOptions.TokenEndpoint);
 
-                client.ClientId = metaClientOptions.ClientId;
-                client.ClientSecret = metaClientOptions.ClientSecret;
+                client.ClientId = ClientId.Parse(metaClientOptions.ClientId);
+                client.ClientSecret = ClientSecret.Parse(metaClientOptions.ClientSecret);
 
-                client.Scope = metaClientOptions.Scopes;
+                client.Scope = Duende.AccessTokenManagement.Scope.Parse(metaClientOptions.Scopes);
             })
             .AddClient("storage", client =>
             {
-                client.TokenEndpoint = storageClientOptions.TokenEndpoint;
+                client.TokenEndpoint = new Uri(storageClientOptions.TokenEndpoint);
 
-                client.ClientId = storageClientOptions.ClientId;
-                client.ClientSecret = storageClientOptions.ClientSecret;
+                client.ClientId = ClientId.Parse(storageClientOptions.ClientId);
+                client.ClientSecret = ClientSecret.Parse(storageClientOptions.ClientSecret);
 
-                client.Scope = storageClientOptions.Scopes;
+                client.Scope = Duende.AccessTokenManagement.Scope.Parse(storageClientOptions.Scopes);
             })
             .AddClient("generic", client =>
             {
-                client.TokenEndpoint = genericClientOptions.TokenEndpoint;
+                client.TokenEndpoint = new Uri(genericClientOptions.TokenEndpoint);
 
-                client.ClientId = genericClientOptions.ClientId;
-                client.ClientSecret = genericClientOptions.ClientSecret;
+                client.ClientId = ClientId.Parse(genericClientOptions.ClientId);
+                client.ClientSecret = ClientSecret.Parse(genericClientOptions.ClientSecret);
 
-                client.Scope = genericClientOptions.Scopes;
+                client.Scope = Duende.AccessTokenManagement.Scope.Parse(genericClientOptions.Scopes);
             })
             .AddClient("ml", client =>
             {
-                client.TokenEndpoint = mlClientOptions.TokenEndpoint;
+                client.TokenEndpoint = new Uri(mlClientOptions.TokenEndpoint);
 
-                client.ClientId = mlClientOptions.ClientId;
-                client.ClientSecret = mlClientOptions.ClientSecret;
+                client.ClientId = ClientId.Parse(mlClientOptions.ClientId);
+                client.ClientSecret = ClientSecret.Parse(mlClientOptions.ClientSecret);
 
-                client.Scope = mlClientOptions.Scopes;
+                client.Scope = Duende.AccessTokenManagement.Scope.Parse(mlClientOptions.Scopes);
             });
         
         Services.AddHttpClient<MetaServiceClient>(client =>
@@ -305,7 +353,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             })
 #pragma warning restore S4830            
 #endif                  
-            .AddClientCredentialsTokenHandler("meta");
+            .AddClientCredentialsTokenHandler(ClientCredentialsClientName.Parse("meta"));
 
         Services.AddHttpClient<StorageServiceClient>(client =>
             {
@@ -322,7 +370,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             })
 #pragma warning restore S4830            
 #endif            
-            .AddClientCredentialsTokenHandler("storage");
+            .AddClientCredentialsTokenHandler(ClientCredentialsClientName.Parse("storage"));
         
         Services.AddHttpClient<GenericServiceClient>(client =>
             {
@@ -337,7 +385,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             })
 #pragma warning restore S4830             
 #endif                        
-            .AddClientCredentialsTokenHandler("generic");
+            .AddClientCredentialsTokenHandler(ClientCredentialsClientName.Parse("generic"));
         
         Services.AddHttpClient<MlServiceClient>(client =>
             {
@@ -352,15 +400,17 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             })
 #pragma warning restore S4830             
 #endif                        
-            .AddClientCredentialsTokenHandler("ml");
+            .AddClientCredentialsTokenHandler(ClientCredentialsClientName.Parse("ml"));
         
-        Services.AddAutoMapper(config =>
-        {
-            config.AddBallwareDocumentStorageMappings();
-            config.AddProfile<MetaServiceDocumentMetadataProfile>();
-            config.AddProfile<GenericServiceDocumentMetadataProfile>();
-            config.AddProfile<MlServiceDocumentMetadataProfile>();
-        });
+        var mapsterConfig = new TypeAdapterConfig()
+            .AddBallwareDocumentStorageMappings();
+
+        new MetaServiceDocumentMetadataProfile().Register(mapsterConfig);
+        new GenericServiceDocumentMetadataProfile().Register(mapsterConfig);
+        new MlServiceDocumentMetadataProfile().Register(mapsterConfig);
+
+        Services.AddSingleton(mapsterConfig);
+        Services.AddScoped<IMapper, ServiceMapper>();
         
         var storageConnectionStringIdentifier = storageOptions.ConnectionString;
             
@@ -414,13 +464,13 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         {
             Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("document", new Microsoft.OpenApi.Models.OpenApiInfo
+                c.SwaggerDoc("document", new Microsoft.OpenApi.OpenApiInfo
                 {
                     Title = "ballware document user API",
                     Version = "v1"
                 });
                 
-                c.SwaggerDoc("service", new Microsoft.OpenApi.Models.OpenApiInfo
+                c.SwaggerDoc("service", new Microsoft.OpenApi.OpenApiInfo
                 {
                     Title = "ballware document service API",
                     Version = "v1"
@@ -430,17 +480,15 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
                 c.AddSecurityDefinition("oidc", new OpenApiSecurityScheme
                 {
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.OpenIdConnect,
+                    Type = Microsoft.OpenApi.SecuritySchemeType.OpenIdConnect,
                     OpenIdConnectUrl = new Uri(authorizationOptions.Authority + "/.well-known/openid-configuration")
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                c.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oidc" }
-                        },
-                        swaggerOptions.RequiredScopes.Split(" ")
+                        new OpenApiSecuritySchemeReference("oidc"),
+                        swaggerOptions.RequiredScopes.Split(" ").ToList()
                     }
                 });
             });
@@ -495,6 +543,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseAntiforgery();
         app.UseStaticFiles();
         
         app.Use(async (context, next) =>
@@ -507,7 +556,6 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.UseBallwareDevExpressReporting();
 
         app.MapControllers();
-        app.MapRazorPages();
         app.MapSignOnEndpoint();
         
         app.MapDocumentUserApi("/document/document");
@@ -523,6 +571,14 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.MapTenantableEditingApi<Data.Public.Subscription>("/document/subscription", "meta", "subscription", "Subscription", "Subscription", "documentApi", "document");
         
         app.MapProcessingStateDocumentApi("/document/processingstate");
+
+        app.MapRazorComponents<App>()
+            .AddAdditionalAssemblies(typeof(Ballware.Document.Engine.Dx.Components.Designer).Assembly)
+            .AddInteractiveServerRenderMode(options =>
+            {
+                options.ContentSecurityFrameAncestorsPolicy = FrameAncestorsPolicy;
+            })
+            .RequireAuthorization();
         
         var authorizationOptions = app.Services.GetService<IOptions<AuthorizationOptions>>()?.Value;
         var swaggerOptions = app.Services.GetService<IOptions<SwaggerOptions>>()?.Value;

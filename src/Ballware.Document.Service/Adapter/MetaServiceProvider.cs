@@ -1,4 +1,4 @@
-using AutoMapper;
+using MapsterMapper;
 using Ballware.Document.Api;
 using Ballware.Document.Data;
 using Ballware.Document.Data.Repository;

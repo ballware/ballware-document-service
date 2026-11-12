@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Ballware.Document.Data.Ef.Configuration;
+using Mapster;
+using MapsterMapper;
 using Ballware.Document.Data.Ef.Postgres.Tests.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -79,10 +81,8 @@ public class RepositoryBaseTest : DatabaseBackedBaseTest
         });
             
         PreparedBuilder.Services.AddBallwareDocumentStorageForPostgres(storageOptions, connectionString);
-        PreparedBuilder.Services.AddAutoMapper(config =>
-        {
-            config.AddBallwareDocumentStorageMappings();
-        });
+        PreparedBuilder.Services.AddSingleton(new TypeAdapterConfig().AddBallwareDocumentStorageMappings());
+        PreparedBuilder.Services.AddScoped<IMapper, ServiceMapper>();
 
         Application = PreparedBuilder.Build();
         

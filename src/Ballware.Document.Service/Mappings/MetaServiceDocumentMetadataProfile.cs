@@ -1,25 +1,25 @@
-using AutoMapper;
+using Mapster;
 using Ballware.Document.Metadata;
 
 namespace Ballware.Document.Service.Mappings;
 
-public class MetaServiceDocumentMetadataProfile : Profile
+public class MetaServiceDocumentMetadataProfile : IRegister
 {
-    public MetaServiceDocumentMetadataProfile()
+    public void Register(TypeAdapterConfig config)
     {
-        CreateMap<Ballware.Meta.Service.Client.ServiceTenantReportDatasourceDefinition, ReportDatasourceDefinition>();
-        CreateMap<Ballware.Meta.Service.Client.ServiceTenantReportDatasourceTable, ReportDatasourceTable>();
+        config.NewConfig<Ballware.Meta.Service.Client.ServiceTenantReportDatasourceDefinition, ReportDatasourceDefinition>();
+        config.NewConfig<Ballware.Meta.Service.Client.ServiceTenantReportDatasourceTable, ReportDatasourceTable>();
 
-        CreateMap<Ballware.Meta.Service.Client.ServiceEntity, EntityMetadata>()
-            .ForMember(dst => dst.RightsCheckScript, 
-                opt => opt.MapFrom(source => source.CustomScripts.ExtendedRightsCheck));
-        
-        CreateMap<Ballware.Meta.Service.Client.ServiceTenant, Tenant>();
-        CreateMap<Ballware.Meta.Service.Client.TenantSelectListEntry, TenantListEntry>();
+        config.NewConfig<Ballware.Meta.Service.Client.ServiceEntity, EntityMetadata>()
+            .Map(dst => dst.RightsCheckScript,
+                src => src.CustomScripts.ExtendedRightsCheck);
 
-        CreateMap<Ballware.Shared.Api.Public.JobStates, Ballware.Meta.Service.Client.JobStates>();
-        CreateMap<Ballware.Meta.Service.Client.JobStates, Ballware.Shared.Api.Public.JobStates>();
-        
-        CreateMap<Ballware.Meta.Service.Client.ProcessingStateSelectListEntry, ProcessingStateSelectListEntry>();
+        config.NewConfig<Ballware.Meta.Service.Client.ServiceTenant, Tenant>();
+        config.NewConfig<Ballware.Meta.Service.Client.TenantSelectListEntry, TenantListEntry>();
+
+        config.NewConfig<Ballware.Shared.Api.Public.JobStates, Ballware.Meta.Service.Client.JobStates>();
+        config.NewConfig<Ballware.Meta.Service.Client.JobStates, Ballware.Shared.Api.Public.JobStates>();
+
+        config.NewConfig<Ballware.Meta.Service.Client.ProcessingStateSelectListEntry, ProcessingStateSelectListEntry>();
     }
 }

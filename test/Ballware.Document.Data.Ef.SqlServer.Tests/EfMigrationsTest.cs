@@ -1,4 +1,6 @@
 using Ballware.Document.Data.Ef.Configuration;
+using Mapster;
+using MapsterMapper;
 using Ballware.Document.Data.Ef.SqlServer.Tests.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -22,10 +24,8 @@ public class EfMigrationsTest : DatabaseBackedBaseTest
         });
 
         PreparedBuilder.Services.AddBallwareDocumentStorageForSqlServer(storageOptions, connectionString);
-        PreparedBuilder.Services.AddAutoMapper(config =>
-        {
-            config.AddBallwareDocumentStorageMappings();
-        });
+        PreparedBuilder.Services.AddSingleton(new TypeAdapterConfig().AddBallwareDocumentStorageMappings());
+        PreparedBuilder.Services.AddScoped<IMapper, ServiceMapper>();
 
         var app = PreparedBuilder.Build();
 

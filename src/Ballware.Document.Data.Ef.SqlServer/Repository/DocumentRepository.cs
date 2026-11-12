@@ -1,4 +1,4 @@
-using AutoMapper;
+using MapsterMapper;
 using Ballware.Document.Data.Ef.Repository;
 using Ballware.Document.Data.Repository;
 using Ballware.Document.Data.SelectLists;

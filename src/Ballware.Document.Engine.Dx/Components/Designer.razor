@@ -1,0 +1,51 @@
+@page "/designer"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using Ballware.Shared.Authorization
+@using Microsoft.AspNetCore.Http
+@inject IDocumentDatasourceProvider DocumentDatasourceProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IPrincipalUtils PrincipalUtils
+
+<DxReportDesigner ReportName="@ReportName" Height="100%" Width="100%" DataSources="@DataSources">
+    <DxReportDesignerClientSideModelSettings IncludeLocalization="false" />
+    <DxReportDesignerDataSourceSettings AllowAddDataSource="@allowDataSourceEditing"
+                                       AllowEditDataSource="@allowDataSourceEditing"
+                                       AllowRemoveDataSource="@allowDataSourceEditing" />
+    <DxReportDesignerCallbacks CustomizeLocalization="BallwareReportingCustomization.customizeLocalization"
+                              CustomizeMenuActions="BallwareReportingCustomization.customizeMenuActions" />
+</DxReportDesigner>
+
+@code {
+    private const string DocumentEditRight = "meta.document.edit";
+
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? Id { get; set; }
+
+    private Dictionary<string, object> DataSources { get; } = new();
+
+    private bool allowDataSourceEditing;
+
+    private string ReportName => string.IsNullOrWhiteSpace(Id) ? "new" : Id;
+
+    protected override void OnInitialized()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+
+        if (user?.Identity == null || !user.Identity.IsAuthenticated)
+        {
+            return;
+        }
+
+        var tenantId = PrincipalUtils.GetUserTenandId(user);
+        var rights = PrincipalUtils.GetUserRights(user).ToList();
+
+        allowDataSourceEditing = rights.Contains(DocumentEditRight);
+
+        foreach (var datasource in DocumentDatasourceProvider.CreateDatasourcesForTenant(tenantId))
+        {
+            DataSources.Add(datasource.Key, datasource.Value);
+        }
+    }
+}

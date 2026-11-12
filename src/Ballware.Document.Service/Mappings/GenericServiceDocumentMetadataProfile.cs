@@ -1,14 +1,14 @@
-using AutoMapper;
+using Mapster;
 using Ballware.Document.Metadata;
 
 namespace Ballware.Document.Service.Mappings;
 
-public class GenericServiceDocumentMetadataProfile : Profile
+public class GenericServiceDocumentMetadataProfile : IRegister
 {
-    public GenericServiceDocumentMetadataProfile()
+    public void Register(TypeAdapterConfig config)
     {
-        CreateMap<Ballware.Generic.Service.Client.ReportDatasourceDefinition, ReportDatasourceDefinition>();
-        CreateMap<Ballware.Generic.Service.Client.ReportDatasourceTable, ReportDatasourceTable>();
-        CreateMap<Ballware.Generic.Service.Client.ReportDatasourceRelation, ReportDatasourceRelation>();
+        config.NewConfig<Ballware.Generic.Service.Client.ReportDatasourceDefinition, ReportDatasourceDefinition>();
+        config.NewConfig<Ballware.Generic.Service.Client.ReportDatasourceTable, ReportDatasourceTable>();
+        config.NewConfig<Ballware.Generic.Service.Client.ReportDatasourceRelation, ReportDatasourceRelation>();
     }
 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RazorClassLibrary>true</RazorClassLibrary>
@@ -15,13 +15,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="ballware.shared.authorization" Version="0.1.0" />
-      <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Drawing" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Drawing.Skia" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Pdf.SkiaRenderer" Version="24.2.7" />
-      <PackageReference Include="DevExpress.Web.Reporting.Common" Version="24.2.7" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+      <PackageReference Include="ballware.shared.authorization" Version="1.1.0" />
+      <PackageReference Include="DevExpress.AspNetCore.Reporting" Version="26.1.6" />
+      <PackageReference Include="DevExpress.Blazor.Reporting.JSBasedControls" Version="26.1.6" />
+      <PackageReference Include="DevExpress.Drawing" Version="26.1.6" />
+      <PackageReference Include="DevExpress.Drawing.Skia" Version="26.1.6" />
+      <PackageReference Include="DevExpress.Pdf.SkiaRenderer" Version="26.1.6" />
+      <PackageReference Include="DevExpress.Web.Reporting.Common" Version="26.1.6" />
       <PackageReference Include="Quartz" Version="3.8.1" />
     </ItemGroup>
 
@@ -29,28 +29,4 @@
       <ProjectReference Include="..\Ballware.Document.Metadata\Ballware.Document.Metadata.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="wwwroot\" />
-      <Folder Include="wwwroot\dist\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Update="package.json">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Content>
-      <Content Update="package-lock.json">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
-    <Target Name="NpmInstall" BeforeTargets="Build">
-        <Message Text="Running 'npm install'..." Importance="high" />
-        <Exec Command="npm install" WorkingDirectory="$(ProjectDir)" />
-    </Target>
-
-    <Target Name="WebpackBuild" AfterTargets="Build">
-        <Message Text="Running 'webpack'..." Importance="high" />
-        <Exec Command="npx webpack --mode production" WorkingDirectory="$(ProjectDir)" />
-    </Target>
-    
 </Project>
