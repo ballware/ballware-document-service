@@ -11,7 +11,7 @@ namespace Ballware.Document.Engine.Dx;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddBallwareDevExpressReporting(this IServiceCollection services)
+    public static IServiceCollection AddBallwareDevExpressReportingCore(this IServiceCollection services)
     {
         services.AddSingleton<LoggerService>();
         services.AddSingleton<FetchNameByIdFromLookup>();
@@ -20,6 +20,21 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDocumentDatasourceProvider, DocumentDatasourceProvider>();
         services.AddScoped<IDocumentModificationProvider, DocumentModificationProvider>();
         services.AddScoped<IDocumentMailGenerator, DocumentMailGenerator>();
+
+        services.ConfigureReportingServices(builder =>
+        {
+            builder.ConfigureReportDesigner(designerConfigurator =>
+            {
+                designerConfigurator.EnableCustomSql();
+            });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddBallwareDevExpressReportingBlazor(this IServiceCollection services)
+    {
+        services.AddBallwareDevExpressReportingCore();
 
         services.AddDevExpressBlazorReporting();
 
@@ -31,14 +46,6 @@ public static class ServiceCollectionExtensions
         services.Add(new ServiceDescriptor(typeof(AsyncModeSettings), (object)new AsyncModeSettings(useReportResolverAsync: true)));
 
         services.AddScoped<ReportStorageWebExtension, DocumentStorage>();
-
-        services.ConfigureReportingServices(builder =>
-        {
-            builder.ConfigureReportDesigner(designerConfigurator =>
-            {
-                designerConfigurator.EnableCustomSql();
-            });
-        });
 
         return services;
     }

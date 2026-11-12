@@ -4,7 +4,7 @@ using Ballware.Document.Metadata;
 using Ballware.Storage.Service.Client;
 using DocumentSelectListEntry = Ballware.Document.Data.SelectLists.DocumentSelectListEntry;
 
-namespace Ballware.Document.Service.Adapter;
+namespace Ballware.Document.Hosting.Adapter;
 
 public class DocumentMetadataProvider : IDocumentMetadataProvider
 { 

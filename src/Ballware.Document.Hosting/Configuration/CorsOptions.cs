@@ -1,4 +1,4 @@
-namespace Ballware.Document.Service.Configuration;
+namespace Ballware.Document.Hosting.Configuration;
 
 public class CorsOptions
 {

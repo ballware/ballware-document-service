@@ -1,7 +1,7 @@
 using Ballware.Shared.Api;
 using Ballware.Storage.Service.Client;
 
-namespace Ballware.Document.Service.Adapter;
+namespace Ballware.Document.Hosting.Adapter;
 
 public class StorageServiceProvider : IFileStorageProvider
 {

@@ -1,7 +1,7 @@
 using Ballware.Document.Data.Repository;
 using Ballware.Document.Metadata;
 
-namespace Ballware.Document.Service.Adapter;
+namespace Ballware.Document.Hosting.Adapter;
 
 public class NotificationMetadataProvider : INotificationMetadataProvider
 {

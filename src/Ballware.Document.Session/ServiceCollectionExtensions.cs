@@ -5,6 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Ballware.Document.Session;
 
+public static class SessionAuthenticationSchemes
+{
+    public const string DistributedSession = "DistributedSession";
+}
+
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddBallwareSession(this IServiceCollection services, SessionOptions options)
@@ -13,7 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSingleton<ISessionPrincipalProvider, SessionPrincipalProvider>();
         services.AddAuthentication()
-            .AddScheme<AuthenticationSchemeOptions, SessionPrincipalAuthenticationHandler>("DistributedSession", null);
+            .AddScheme<AuthenticationSchemeOptions, SessionPrincipalAuthenticationHandler>(SessionAuthenticationSchemes.DistributedSession, null);
         
         return services;
     }

@@ -34,6 +34,7 @@ COPY ./Ballware.Document.Data.Ef ./Ballware.Document.Data.Ef
 COPY ./Ballware.Document.Data.Ef.Postgres ./Ballware.Document.Data.Ef.Postgres
 COPY ./Ballware.Document.Data.Ef.SqlServer ./Ballware.Document.Data.Ef.SqlServer
 COPY ./Ballware.Document.Engine.Dx ./Ballware.Document.Engine.Dx
+COPY ./Ballware.Document.Hosting ./Ballware.Document.Hosting
 COPY ./Ballware.Document.Jobs ./Ballware.Document.Jobs
 COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
 COPY ./Ballware.Document.Service ./Ballware.Document.Service

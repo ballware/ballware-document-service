@@ -2,7 +2,7 @@ using MapsterMapper;
 using Ballware.Document.Metadata;
 using Ballware.Generic.Service.Client;
 
-namespace Ballware.Document.Service.Adapter;
+namespace Ballware.Document.Hosting.Adapter;
 
 public class GenericServiceProvider : IDatasourceDefinitionProvider, IDocumentLookupProvider
 {

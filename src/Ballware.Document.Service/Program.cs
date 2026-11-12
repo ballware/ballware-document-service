@@ -1,5 +1,5 @@
-﻿using Ballware.Document.Service;
-using Ballware.Document.Service.Configuration;
+﻿using Ballware.Document.Hosting.Configuration;
+using Ballware.Document.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;

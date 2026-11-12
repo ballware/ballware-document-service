@@ -8,7 +8,7 @@ namespace Ballware.Document.Engine.Dx;
 
 public static class ApplicationBuilderExtensions
 {
-    public static IApplicationBuilder UseBallwareDevExpressReporting(this IApplicationBuilder builder)
+    public static IApplicationBuilder UseBallwareDevExpressReportingCore(this IApplicationBuilder builder)
     {
         var loggerService = builder.ApplicationServices.GetRequiredService<LoggerService>();
 
@@ -22,6 +22,13 @@ public static class ApplicationBuilderExtensions
 
         DevExpress.Data.Filtering.CriteriaOperator.RegisterCustomFunction(
             builder.ApplicationServices.GetRequiredService<FetchNameByStateFromProcessingState>());
+
+        return builder;
+    }
+
+    public static IApplicationBuilder UseBallwareDevExpressReportingBlazor(this IApplicationBuilder builder)
+    {
+        builder.UseBallwareDevExpressReportingCore();
 
         builder.UseDevExpressBlazorReporting();
 

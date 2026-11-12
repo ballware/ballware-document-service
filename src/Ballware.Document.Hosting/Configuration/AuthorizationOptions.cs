@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace Ballware.Document.Service.Configuration;
+namespace Ballware.Document.Hosting.Configuration;
 
 public class AuthorizationOptions
 {

@@ -1,7 +1,7 @@
 using Mapster;
 using Ballware.Document.Metadata;
 
-namespace Ballware.Document.Service.Mappings;
+namespace Ballware.Document.Hosting.Mappings;
 
 public class GenericServiceDocumentMetadataProfile : IRegister
 {

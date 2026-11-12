@@ -7,7 +7,7 @@ using Ballware.Meta.Service.Client;
 using Ballware.Shared.Api;
 using Ballware.Shared.Authorization;
 
-namespace Ballware.Document.Service.Adapter;
+namespace Ballware.Document.Hosting.Adapter;
 
 public class MetaServiceProvider : IAuthorizationMetadataProvider, IDatasourceDefinitionProvider, IMetaDatasourceProvider, IExportMetadataProvider, IJobMetadataProvider, IDocumentPickvalueProvider, IDocumentProcessingStateProvider, IProcessingStateProvider
 {
