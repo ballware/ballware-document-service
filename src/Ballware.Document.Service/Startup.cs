@@ -144,6 +144,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             .Bind(Configuration.GetSection("MlClient"))
             .ValidateDataAnnotations();
 
+        Services.AddOptionsWithValidateOnStart<ReverseProxyOptions>()
+            .Bind(Configuration.GetSection("ReverseProxy"))
+            .ValidateDataAnnotations();
+
         if (authorizationOptions == null || storageOptions == null)
         {
             throw new ConfigurationException("Required configuration for authorization or storage is missing");
@@ -536,7 +540,11 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
         });
-        
+
+        var reverseProxyOptions = app.Services.GetRequiredService<IOptions<ReverseProxyOptions>>().Value;
+
+        app.UseReverseProxyPathBase(reverseProxyOptions);
+
         app.UseRouting();
 
         app.UseBallwareSession();
