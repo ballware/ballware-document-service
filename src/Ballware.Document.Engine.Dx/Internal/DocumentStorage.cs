@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Ballware.Shared.Authorization;
 using Ballware.Document.Metadata;
 using DevExpress.DataAccess.Sql;
@@ -74,6 +75,19 @@ public class DocumentStorage : ReportStorageWebExtension
 
     public override byte[] GetData(string url)
     {
+        // Sync-Pfad (z. B. MVC/HTTP-Kontexte). Über Task.Run, damit innere async-Ketten
+        // keinen etwaigen SynchronizationContext des Aufrufer-Threads einfangen (Deadlock-Gefahr im Blazor-Circuit).
+        return Task.Run(() => GetDataCoreAsync(url)).GetAwaiter().GetResult();
+    }
+
+    public override async Task<byte[]> GetDataAsync(string url)
+    {
+        // Blazor-Circuit-Pfad (DX-AsyncMode): durchgehend async, blockiert nie den Dispatcher-Thread.
+        return await GetDataCoreAsync(url);
+    }
+
+    private async Task<byte[]> GetDataCoreAsync(string url)
+    {
         if (string.IsNullOrEmpty(url))
         {
             return [];
@@ -102,12 +116,12 @@ public class DocumentStorage : ReportStorageWebExtension
                 matchFindIds = matchFindIds.NextMatch();
             }
 
-            return LoadPrintDocumentBinary(metaProvider, tenantId.Value, Guid.Parse(docId), ids);
+            return await LoadPrintDocumentBinaryAsync(metaProvider, tenantId.Value, Guid.Parse(docId), ids);
         }
         
         if (matchGuid.Success && tenantId != null)
         {
-            return LoadSingleDocumentBinary(metaProvider, tenantId.Value, Guid.Parse(matchGuid.Groups[0].Value));
+            return await LoadSingleDocumentBinaryAsync(metaProvider, tenantId.Value, Guid.Parse(matchGuid.Groups[0].Value));
         }
          
         if ("new".Equals(url) && tenantId != null)
@@ -258,9 +272,9 @@ public class DocumentStorage : ReportStorageWebExtension
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    private static byte[] LoadPrintDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId, IEnumerable<Guid> ids)
+    private static async Task<byte[]> LoadPrintDocumentBinaryAsync(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId, IEnumerable<Guid> ids)
     {
-       var reportBinary = metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId).GetAwaiter().GetResult();
+       var reportBinary = await metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId);
         
         XtraReport report = new XtraReport();
 
@@ -289,9 +303,9 @@ public class DocumentStorage : ReportStorageWebExtension
         }
     }
 
-    private static byte[] LoadSingleDocumentBinary(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId)
+    private static async Task<byte[]> LoadSingleDocumentBinaryAsync(IDocumentMetadataProvider metaProvider, Guid tenantId, Guid documentId)
     {
-        var reportBinary = metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId).GetAwaiter().GetResult();
+        var reportBinary = await metaProvider.DocumentBinaryForTenantAndIdAsync(tenantId, documentId);
 
         XtraReport report = new XtraReport();
 

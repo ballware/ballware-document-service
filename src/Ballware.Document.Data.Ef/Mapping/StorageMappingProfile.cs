@@ -1,30 +1,30 @@
-using AutoMapper;
+using Mapster;
 
 namespace Ballware.Document.Data.Ef.Mapping;
 
-class StorageMappingProfile : Profile
+class StorageMappingProfile : IRegister
 {
-    public StorageMappingProfile()
+    public void Register(TypeAdapterConfig config)
     {
-        CreateMap<Public.Document, Persistables.Document>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.Uuid, opt => opt.MapFrom(src => src.Id));
+        config.NewConfig<Public.Document, Persistables.Document>()
+            .Ignore(dest => dest.Id!)
+            .Map(dest => dest.Uuid, src => src.Id);
 
-        CreateMap<Persistables.Document, Public.Document>()
-            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Uuid));
-     
-        CreateMap<Public.Notification, Persistables.Notification>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.Uuid, opt => opt.MapFrom(src => src.Id));
+        config.NewConfig<Persistables.Document, Public.Document>()
+            .Map(dest => dest.Id, src => src.Uuid);
 
-        CreateMap<Persistables.Notification, Public.Notification>()
-            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Uuid));
+        config.NewConfig<Public.Notification, Persistables.Notification>()
+            .Ignore(dest => dest.Id!)
+            .Map(dest => dest.Uuid, src => src.Id);
 
-        CreateMap<Public.Subscription, Persistables.Subscription>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.Uuid, opt => opt.MapFrom(src => src.Id));
+        config.NewConfig<Persistables.Notification, Public.Notification>()
+            .Map(dest => dest.Id, src => src.Uuid);
 
-        CreateMap<Persistables.Subscription, Public.Subscription>()
-            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Uuid));
+        config.NewConfig<Public.Subscription, Persistables.Subscription>()
+            .Ignore(dest => dest.Id!)
+            .Map(dest => dest.Uuid, src => src.Id);
+
+        config.NewConfig<Persistables.Subscription, Public.Subscription>()
+            .Map(dest => dest.Id, src => src.Uuid);
     }
 }

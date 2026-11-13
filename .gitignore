@@ -426,6 +426,9 @@ test-results/
 *.dmg
 *.app
 
+# Das Projektverzeichnis Ballware.Document.App darf nicht vom *.app-Muster getroffen werden
+!src/Ballware.Document.App/
+
 # content below from: https://github.com/github/gitignore/blob/master/Global/macOS.gitignore
 # General
 .DS_Store
@@ -486,4 +489,7 @@ $RECYCLE.BIN/
 # Local app settings
 appsettings*.local.json
 
-**/wwwroot/dist/*
+# Local environment files
+*.local.env
+ballware-document-service.env
+

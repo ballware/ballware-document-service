@@ -1,0 +1,15 @@
+@page "/viewer"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+
+<DxDocumentViewer ReportName="@ReportName" Height="100%" Width="100%">
+    <DxDocumentViewerClientSideModelSettings IncludeLocalization="false" />
+    <DxDocumentViewerCallbacks CustomizeLocalization="BallwareReportingCustomization.customizeLocalization" />
+</DxDocumentViewer>
+
+@code {
+    private string ReportName => NavigationManager.ToAbsoluteUri(NavigationManager.Uri)
+        .GetComponents(UriComponents.Query, UriFormat.Unescaped);
+}

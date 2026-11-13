@@ -1,14 +1,14 @@
-using AutoMapper;
 using Ballware.Document.Data.Ef.Mapping;
+using Mapster;
 
 namespace Ballware.Document.Data.Ef;
 
 public static class MapperConfigurationExtensions
 {
-    public static IMapperConfigurationExpression AddBallwareDocumentStorageMappings(
-        this IMapperConfigurationExpression configuration)
+    public static TypeAdapterConfig AddBallwareDocumentStorageMappings(
+        this TypeAdapterConfig configuration)
     {
-        configuration.AddProfile<StorageMappingProfile>();
+        new StorageMappingProfile().Register(configuration);
 
         return configuration;
     }
