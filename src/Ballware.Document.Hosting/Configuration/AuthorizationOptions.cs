@@ -26,6 +26,8 @@ public class AuthorizationOptions
     public string? Issuer { get; set; }
     
     public bool RequireHttpsMetadata { get; set; } = true;
+
+    public string[] SignOnAllowedHosts { get; set; } = [];
     
     [Required]
     public required string RequiredUserScope { get; set; } = "documentApi";

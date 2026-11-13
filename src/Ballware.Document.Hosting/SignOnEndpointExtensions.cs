@@ -29,9 +29,9 @@ public static class SignOnEndpointExtensions
 
     private static async Task<IResult> HandleSignOnAsync(HttpContext context, ISessionPrincipalProvider principalProvider, IOptions<AuthorizationOptions> options, ConfigurationManager<OpenIdConnectConfiguration> configurationManager, string idToken, string? redirect)
     {
-        if (!IsSafeRedirect(redirect, context.Request))
+        if (!IsSafeRedirect(redirect, context.Request, options.Value.SignOnAllowedHosts))
         {
-            return Results.BadRequest("Only redirects to /, /viewer or /designer, either relative or absolute on this host, are allowed.");
+            return Results.BadRequest("Only redirects to /, /viewer or /designer on the request host or a configured sign-on host are allowed.");
         }
 
         var config = await configurationManager.GetConfigurationAsync();
@@ -67,7 +67,7 @@ public static class SignOnEndpointExtensions
         return Results.Unauthorized();
     }
 
-    private static bool IsSafeRedirect([NotNullWhen(true)] string? redirect, HttpRequest request)
+    private static bool IsSafeRedirect([NotNullWhen(true)] string? redirect, HttpRequest request, string[] allowedHosts)
     {
         if (string.IsNullOrWhiteSpace(redirect))
         {
@@ -75,22 +75,33 @@ public static class SignOnEndpointExtensions
         }
 
         // Kompatibilität zum Frontend: absolute http(s)-Redirect-URLs sind erlaubt, aber nur auf denselben
-        // Host wie die Anfrage selbst (Open-Redirect auf fremde Hosts bleibt geschlossen).
+        // Host wie die Anfrage selbst oder auf einem per Authorization:SignOnAllowedHosts konfigurierten
+        // Host (Reverse-Proxies liefern meist nicht den öffentlichen Host, z. B. nur "reporting-app").
+        // Open-Redirect auf nicht konfigurierte fremde Hosts bleibt geschlossen.
         // Achtung: Uri.TryCreate interpretiert "/viewer" als absoluten file-URI — diese Fälle fallen
         // bewusst in den relativen Zweig zurück.
         if (Uri.TryCreate(redirect, UriKind.Absolute, out var absolute)
             && (absolute.Scheme == Uri.UriSchemeHttp || absolute.Scheme == Uri.UriSchemeHttps))
         {
-            if (!string.Equals(absolute.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase))
+            var requestHostMatch = string.Equals(absolute.Host, request.Host.Host, StringComparison.OrdinalIgnoreCase);
+
+            var allowedHostMatch = allowedHosts.Any(host => !string.IsNullOrWhiteSpace(host)
+                && string.Equals(absolute.Host, TrimToHost(host), StringComparison.OrdinalIgnoreCase));
+
+            if (!requestHostMatch && !allowedHostMatch)
             {
                 return false;
             }
 
-            var isDefaultPort = absolute.Scheme == Uri.UriSchemeHttp ? absolute.Port == 80 : absolute.Port == 443;
-
-            if (!isDefaultPort && request.Host.Port != absolute.Port)
+            // Für den konfigurierten öffentlichen Host gilt die Port-Regel nicht (der Proxy liefert keinen Port).
+            if (requestHostMatch && !allowedHostMatch)
             {
-                return false;
+                var isDefaultPort = absolute.Scheme == Uri.UriSchemeHttp ? absolute.Port == 80 : absolute.Port == 443;
+
+                if (!isDefaultPort && request.Host.Port != absolute.Port)
+                {
+                    return false;
+                }
             }
 
             return IsSafePath(absolute.AbsolutePath);
@@ -102,6 +113,27 @@ public static class SignOnEndpointExtensions
         }
 
         return IsSafePath(redirect);
+    }
+
+    private static string TrimToHost(string value)
+    {
+        var host = value.Trim();
+
+        var schemeIndex = host.IndexOf("://", StringComparison.Ordinal);
+
+        if (schemeIndex >= 0)
+        {
+            host = host.Substring(schemeIndex + 3);
+        }
+
+        var end = host.IndexOfAny(['/', ':', '?', '#']);
+
+        if (end >= 0)
+        {
+            host = host.Substring(0, end);
+        }
+
+        return host;
     }
 
     private static bool IsSafePath(string rawPath)
