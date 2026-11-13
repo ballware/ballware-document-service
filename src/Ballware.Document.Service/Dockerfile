@@ -4,6 +4,8 @@ ARG GITHUB_USERNAME
 ARG GITHUB_PAT
 ARG DEVEXPRESS_NUGETFEED
 RUN [ -z "$DEVEXPRESS_NUGETFEED" ] && echo "DEVEXPRESS_NUGETFEED needs to be defined" && exit 1 || true
+ARG DEVEXPRESS_LICENSE
+RUN [ -z "$DEVEXPRESS_LICENSE" ] && echo "DEVEXPRESS_LICENSE needs to be defined" && exit 1 || true
 
 WORKDIR /app
 EXPOSE 5000
@@ -25,6 +27,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG GITHUB_USERNAME
 ARG GITHUB_PAT
 ARG DEVEXPRESS_NUGETFEED
+ARG DEVEXPRESS_LICENSE
 
 WORKDIR /src
 
@@ -43,6 +46,7 @@ COPY ./Ballware.Document.Session ./Ballware.Document.Session
 WORKDIR "/src/Ballware.Document.Service"
 RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username "$GITHUB_USERNAME" --password "$GITHUB_PAT" --store-password-in-clear-text
 RUN dotnet nuget add source "$DEVEXPRESS_NUGETFEED" --name devexpress
+RUN mkdir -p "$HOME/.config/DevExpress" && printf '%s' "$DEVEXPRESS_LICENSE" > "$HOME/.config/DevExpress/DevExpress_License.txt"
 RUN dotnet restore "Ballware.Document.Service.csproj"
 RUN dotnet build "Ballware.Document.Service.csproj" -c Release -o /app/build
 
