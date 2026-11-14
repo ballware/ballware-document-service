@@ -1,5 +1,4 @@
 using Ballware.Document.Session.Configuration;
-using Ballware.Document.Session.Internal;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,7 +17,7 @@ public static class OpenIdConnectOptionsExtensions
             {
                 var httpContext = context.HttpContext;
                 var sessionOptions = httpContext.RequestServices.GetRequiredService<SessionOptions>();
-                var sessionProvider = httpContext.RequestServices.GetRequiredService<SessionPrincipalProvider>();
+                var sessionProvider = httpContext.RequestServices.GetRequiredService<ISessionPrincipalProvider>();
 
                 var principal = context.Principal!;
                 await sessionProvider.StorePrincipalAsync(httpContext, principal);

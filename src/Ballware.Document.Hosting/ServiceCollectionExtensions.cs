@@ -79,6 +79,10 @@ public static class ServiceCollectionExtensions
             throw new ConfigurationException("Required configuration for authorization or storage is missing");
         }
 
+        // wirft bei unzulässiger Angabe, damit sie nicht verschleiert als Abweisung der
+        // OIDC-Challenge beim IdP endet
+        OpenIdConnectPublicRedirectExtensions.NormalizePublicBaseUrl(authorizationOptions.PublicBaseUrl);
+
         var validProviders = new[] { "mssql", "postgres" };
 
         if (!validProviders.Contains(storageOptions.Provider))
@@ -320,6 +324,7 @@ public static class ServiceCollectionExtensions
                     openIdConnectOptions.TokenValidationParameters.ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority;
 
                     openIdConnectOptions.RegisterBallwareSessionTokenHandling();
+                    openIdConnectOptions.RegisterBallwarePublicRedirectUriHandling(authorizationOptions);
                 })
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtBearerOptions =>
                 {
