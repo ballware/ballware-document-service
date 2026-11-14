@@ -28,7 +28,15 @@ public class AuthorizationOptions
     public bool RequireHttpsMetadata { get; set; } = true;
 
     public string[] SignOnAllowedHosts { get; set; } = [];
-    
+
+    // Öffentliche Basis-URL, unter der die App vom Browser erreicht wird, z. B.
+    // https://reporting.ballware.de bzw. http://localhost:3003. Der redirect_uri der
+    // OIDC-Challenge wird deterministisch daraus abgeleitet (Basis-URL + CallbackPath) und muss
+    // in genau dieser Form als gültige Redirect-URI für ClientId beim IdP registriert sein.
+    // Wird nichts konfiguriert, bleibt es bei der Herleitung aus Scheme/Host des eingehenden
+    // Requests (Anzeige der verwendeten URL im Log bzw. bei Challenge-Fehlern).
+    public string? PublicBaseUrl { get; set; }
+
     [Required]
     public required string RequiredUserScope { get; set; } = "documentApi";
 }

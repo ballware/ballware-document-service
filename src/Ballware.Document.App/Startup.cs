@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Serilog;
 
@@ -94,6 +95,15 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
     public void InitializeApp(WebApplication app)
     {
+        var authorizationOptions = app.Services.GetRequiredService<IOptions<AuthorizationOptions>>().Value;
+
+        if (string.IsNullOrWhiteSpace(authorizationOptions.PublicBaseUrl))
+        {
+            Log.Warning(
+                "Authorization:PublicBaseUrl is not configured. The OIDC sign-in redirect_uri is derived from the incoming request ({ClientId}), so every host the app is reached with must be registered as a valid redirect URI for its callback path at the identity provider.",
+                authorizationOptions.ClientId);
+        }
+
         if (Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -139,6 +149,10 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
         app.UseMiddleware<ChallengeDifferentiationMiddleware>();
 
         app.UseAuthentication();
+
+        // muss die Autorisierungsmiddleware umschließen, deren Challenge die IdP-Fehler auslöst
+        app.UseMiddleware<SignInChallengeFallbackMiddleware>();
+
         app.UseAuthorization();
         app.UseAntiforgery();
         app.UseStaticFiles();
