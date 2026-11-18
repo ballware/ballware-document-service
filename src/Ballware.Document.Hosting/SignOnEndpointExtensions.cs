@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Ballware.Document.Hosting.Configuration;
-using Ballware.Document.Session;
+using Ballware.Shared.Web.Session;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

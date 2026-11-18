@@ -4,7 +4,7 @@ using Ballware.Document.App.Middleware;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Hosting;
 using Ballware.Document.Hosting.Configuration;
-using Ballware.Document.Session;
+using Ballware.Shared.Web.Session;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -144,7 +144,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         app.UseRouting();
 
-        app.UseBallwareSession();
+        app.UseBallwareWebSession();
 
         app.UseMiddleware<ChallengeDifferentiationMiddleware>();
 

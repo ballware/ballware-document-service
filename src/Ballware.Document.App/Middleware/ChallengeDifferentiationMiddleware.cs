@@ -1,4 +1,4 @@
-using Ballware.Document.Session;
+using Ballware.Shared.Web.Session;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 

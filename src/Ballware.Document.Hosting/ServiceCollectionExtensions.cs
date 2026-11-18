@@ -7,12 +7,12 @@ using Ballware.Document.Hosting.Adapter;
 using Ballware.Document.Hosting.Configuration;
 using Ballware.Document.Hosting.Mappings;
 using Ballware.Document.Metadata;
-using Ballware.Document.Session;
-using Ballware.Document.Session.Configuration;
 using Ballware.Generic.Service.Client;
 using Ballware.Meta.Service.Client;
 using Ballware.Ml.Service.Client;
 using Ballware.Shared.Authorization;
+using Ballware.Shared.Web.Session;
+using Ballware.Shared.Web.Session.Configuration;
 using Ballware.Storage.Service.Client;
 using Duende.AccessTokenManagement;
 using Mapster;
@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
         AuthorizationOptions? authorizationOptions =
             configuration.GetSection("Authorization").Get<AuthorizationOptions>();
         StorageOptions? storageOptions = configuration.GetSection("Storage").Get<StorageOptions>();
-        SessionOptions? sessionOptions = configuration.GetSection("Session").Get<SessionOptions>();
+        WebSessionOptions? sessionOptions = configuration.GetSection("Session").Get<WebSessionOptions>();
         ServiceClientOptions? metaClientOptions = configuration.GetSection("MetaClient").Get<ServiceClientOptions>();
         ServiceClientOptions? storageClientOptions = configuration.GetSection("StorageClient").Get<ServiceClientOptions>();
         ServiceClientOptions? genericClientOptions = configuration.GetSection("GenericClient").Get<ServiceClientOptions>();
@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
             .Bind(configuration.GetSection("Storage"))
             .ValidateDataAnnotations();
 
-        services.AddOptionsWithValidateOnStart<SessionOptions>()
+        services.AddOptionsWithValidateOnStart<WebSessionOptions>()
             .Bind(configuration.GetSection("Session"))
             .ValidateDataAnnotations();
 
@@ -92,7 +92,7 @@ public static class ServiceCollectionExtensions
 
         if (sessionOptions == null)
         {
-            sessionOptions = new SessionOptions();
+            sessionOptions = new WebSessionOptions();
         }
 
         if (metaClientOptions == null)
@@ -323,7 +323,7 @@ public static class ServiceCollectionExtensions
                     openIdConnectOptions.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
                     openIdConnectOptions.TokenValidationParameters.ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority;
 
-                    openIdConnectOptions.RegisterBallwareSessionTokenHandling();
+                    openIdConnectOptions.RegisterBallwareWebSessionTokenHandling();
                     openIdConnectOptions.RegisterBallwarePublicRedirectUriHandling(authorizationOptions);
                 })
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtBearerOptions =>
@@ -350,7 +350,7 @@ public static class ServiceCollectionExtensions
                     new OpenIdConnectConfigurationRetriever(), retriever);
             });
 
-            services.AddBallwareSession(options.Session);
+            services.AddBallwareWebSession(options.Session);
         }
         else
         {
