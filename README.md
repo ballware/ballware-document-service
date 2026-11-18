@@ -1,4 +1,12 @@
 # ballware document service
+[![Build & Publish (main)](https://github.com/ballware/ballware-document-service/actions/workflows/publish-packages.yml/badge.svg?branch=main)](https://github.com/ballware/ballware-document-service/actions/workflows/publish-packages.yml)
+[![CI Tests (main)](https://github.com/ballware/ballware-document-service/actions/workflows/sonarqube-latest.yml/badge.svg?branch=main)](https://github.com/ballware/ballware-document-service/actions/workflows/sonarqube-latest.yml)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ballware_ballware-document-service&metric=coverage)](https://sonarcloud.io/summary/overall?id=ballware_ballware-document-service)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ballware_ballware-document-service&metric=bugs)](https://sonarcloud.io/summary/overall?id=ballware_ballware-document-service)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ballware_ballware-document-service&metric=vulnerabilities)](https://sonarcloud.io/summary/overall?id=ballware_ballware-document-service)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ballware_ballware-document-service&metric=security_rating)](https://sonarcloud.io/summary/overall?id=ballware_ballware-document-service)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ballware_ballware-document-service&metric=reliability_rating)](https://sonarcloud.io/summary/overall?id=ballware_ballware-document-service)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ballware_ballware-document-service&metric=sqale_rating)](https://sonarcloud.io/summary/overall?id=ballware_ballware-document-service)
 
 Multi-tenant document and reporting service for the ballware platform. It stores report
 definitions (DevExpress XtraReports), exposes them as REST APIs, hosts an interactive Blazor
