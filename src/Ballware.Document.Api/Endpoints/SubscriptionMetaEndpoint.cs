@@ -22,7 +22,7 @@ public static class SubscriptionMetaEndpoint
         string apiTag = ApiTag,
         string apiOperationPrefix = ApiOperationPrefix,
         string authorizationScope = "documentApi",
-        string apiGroup = "subscription")
+        string apiGroup = "document")
     {
         app.MapGet(basePath + "/selectlist", HandleSelectListAsync)
             .RequireAuthorization(authorizationScope)

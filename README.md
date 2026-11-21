@@ -187,6 +187,18 @@ required at build time).
 | `/document/subscription` | user / service | `selectlist`, `selectbyid/{id}`, `trigger`, tenantable CRUD |
 | `/document/processingstate` | user | `selectlistallowedsuccessorsforentities/document`, `.../notification` |
 
+All `/document/**` user operations (generic CRUD included) are contained in the **`document`**
+OpenAPI document; the inter-service operations form the **`service`** document. Committed
+snapshots and a generator script live in [docs/openapi/](docs/openapi/).
+
+---
+
+## Documentation
+
+- [docs/README.md](docs/README.md) – documentation index (concepts + API reference)
+- [docs/api/README.md](docs/api/README.md) – API surface and conventions
+- [docs/openapi/](docs/openapi/) – committed OpenAPI snapshots (`document.json`, `service.json`) and how to regenerate them
+
 ---
 
 ## 4. Configuration

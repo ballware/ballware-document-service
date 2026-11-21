@@ -21,7 +21,7 @@ public static class NotificationMetaEndpoint
         string apiTag = ApiTag,
         string apiOperationPrefix = ApiOperationPrefix,
         string authorizationScope = "documentApi",
-        string apiGroup = "notification")
+        string apiGroup = "document")
     {   
         app.MapGet(basePath + "/selectlist", HandleSelectListAsync)
             .RequireAuthorization(authorizationScope)
