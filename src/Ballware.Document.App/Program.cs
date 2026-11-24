@@ -30,7 +30,7 @@ try
 {
     startup.InitializeServices();
 }
-catch (ConfigurationException ex)
+catch (Exception ex) when (ex is ConfigurationException or Ballware.Shared.Web.Oidc.Configuration.ConfigurationException)
 {
     await Console.Error.WriteLineAsync(ex.Message);
     System.Environment.Exit(-1);

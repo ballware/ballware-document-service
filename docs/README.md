@@ -41,7 +41,7 @@ datasource integration, background jobs, and the OpenAPI snapshots the pages are
   `http://localhost:5005` (App host, Blazor designer/viewer) — see the repository `README.md`.
 - Authentication: JWT bearer against an OIDC issuer; authorization by scope → policy
   (`documentApi` for all `/document/**` user operations, `serviceApi` for Service API
-  operations, `src/Ballware.Document.Hosting/ServiceCollectionExtensions.cs:375-395`).
+  operations, `src/Ballware.Document.Hosting/ServiceCollectionExtensions.cs:324-326`).
 - Security scheme: `oidc` with `openIdConnectUrl = <Authority>/.well-known/openid-configuration`
   (`Startup.cs:142-146`).
 - JSON bodies are PascalCase (`Startup.cs:85-93`).

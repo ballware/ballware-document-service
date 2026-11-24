@@ -67,7 +67,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
             x.ValueLengthLimit = int.MaxValue;
         });
         
-        Services.AddBallwareDocumentAuthentication(documentOptions, withSession: false, "ballware-document-service", Configuration["DataProtection:KeysPath"]);
+        Services.AddBallwareDocumentApiAuthentication(documentOptions);
 
         if (corsOptions != null)
         {

@@ -66,8 +66,10 @@ and the UI stay consistent without a service-to-service call for report metadata
 ### 1.2 Design rules
 
 1. **Shared hosting layer.** `Ballware.Document.Hosting` contains all options binding, DI
-   extension methods, OIDC/session wiring, Mapster profiles and client adapters. Neither host
-   references the other; both reference `Hosting`.
+   extension methods, Mapster profiles and client adapters. Browser authentication (cookie +
+   OpenID Connect + session) is not implemented here — it is provided by the shared packages
+   `Ballware.Shared.Web.Oidc` / `ballware.shared.web.session`, which `Hosting` wires up. Neither
+   host references the other; both reference `Hosting`.
 2. **API host is JWT-only.** Razor components, antiforgery/CSP framing and the session cookie
    live in the App host only. The Service host sets `DefaultScheme = DefaultChallengeScheme =
    JwtBearer`.
@@ -91,9 +93,9 @@ and the UI stay consistent without a service-to-service call for report metadata
 | Project | Responsibility |
 | --- | --- |
 | `Ballware.Document.Service` | API host composition (`Program.cs`, `Startup.cs`), Swagger docs, Quartz host, import/export repository hook |
-| `Ballware.Document.App` | Blazor Web App composition, `/signon` endpoint, `ChallengeDifferentiationMiddleware`, `SignInChallengeFallbackMiddleware` |
+| `Ballware.Document.App` | Blazor Web App composition; `/signon`, challenge-differentiation and sign-in fallback middleware come from `Ballware.Shared.Web.Oidc` / `ballware.shared.web.session` |
 | `Ballware.Document.Api` | Minimal-API endpoint groups for document / notification / subscription / processing-state |
-| `Ballware.Document.Hosting` | Options, validation, authentication setup, service clients, datastore selection, metadata providers, adapters, Mapster profiles, sign-on endpoint |
+| `Ballware.Document.Hosting` | Options, validation, authentication wiring (shared browser auth, JWT-only API auth), service clients, datastore selection, metadata providers, adapters, Mapster profiles |
 | `Ballware.Document.Engine.Dx` | DevExpress reporting integration, report storage, datasource provider, mail/PDF generation, DE localization assets |
 | `Ballware.Document.Jobs` | Quartz job and trigger registration (`MailOptions`, `TriggerOptions`) |
 | `Ballware.Document.Data` | Public contracts and persistables (`Document`, `Notification`, `Subscription`), repository interfaces, select-list DTOs |
@@ -114,10 +116,10 @@ and the UI stay consistent without a service-to-service call for report metadata
 | Image/PDF rendering | SkiaSharp (`SkiaSharp.NativeAssets.Linux`), Microsoft core fonts installed in the images |
 | Persistence | EF Core 10, `Npgsql.EntityFrameworkCore.PostgreSQL`, `Microsoft.EntityFrameworkCore.SqlServer`, `EFCore.NamingConventions` |
 | Scheduling | Quartz.NET 3.8 (`Quartz.AspNetCore`, clustered AdoJobStore with JSON serialization) |
-| Authentication | `Microsoft.AspNetCore.Authentication.JwtBearer`, `OpenIdConnect`, Cookie; `ballware.shared.web.session` (distributed session), ASP.NET Core Data Protection |
+| Authentication | `Microsoft.AspNetCore.Authentication.JwtBearer`, `OpenIdConnect`, Cookie; `Ballware.Shared.Web.Oidc` (browser sign-in, `/signon`, challenge fallback), `ballware.shared.web.session` (distributed session), ASP.NET Core Data Protection |
 | Service-to-service auth | `Duende.AccessTokenManagement` client-credentials token management |
 | Platform clients | `ballware.meta.service.client`, `Ballware.Storage.Service.Client`, `Ballware.Generic.Service.Client`, `Ballware.Ml.Service.Client` |
-| Shared ballware building blocks | `ballware.shared.api.endpoints`, `Ballware.Shared.Api.Jobs`, `Ballware.Shared.Data`, `ballware.shared.data.ef`, `Ballware.Shared.Authorization(.Jint)` |
+| Shared ballware building blocks | `ballware.shared.api.endpoints`, `Ballware.Shared.Api.Jobs`, `Ballware.Shared.Data`, `ballware.shared.data.ef`, `Ballware.Shared.Authorization(.Jint)`, `Ballware.Shared.Web.Oidc`, `ballware.shared.web.session` |
 | Mapping | Mapster + `Mapster.DependencyInjection` |
 | Logging | Serilog (`Serilog.AspNetCore`, console sink), `UseSerilogRequestLogging` |
 | API docs | Swashbuckle 10 (`Swashbuckle.AspNetCore.Annotations`), `Swashbuckle.AspNetCore.Cli`, `NSwag.ConsoleCore` |
@@ -228,18 +230,29 @@ Required sections fail fast at startup with a `ConfigurationException` (options 
   "Issuer": null,                 // defaults to Authority
   "RequireHttpsMetadata": true,
   "RequiredUserScope": "documentApi",
-  "SignOnAllowedHosts": [ "reporting.ballware.de" ],
-  "PublicBaseUrl": "https://reporting.ballware.de"
+  "UserScopePolicyName": "documentApi",        // App host only
+  "ServiceScopePolicyName": "serviceApi",      // App host only
+  "SignOnAllowedHosts": [ "reporting.ballware.de" ],   // App host only
+  "SignOnAllowedRedirectPathPrefixes": [ "/viewer", "/designer" ], // App host only
+  "PublicBaseUrl": "https://reporting.ballware.de"     // App host only
 }
 ```
 
+The section is bound twice on the App host: `Ballware.Shared.Web.Oidc` reads it as
+`BrowserAuthorizationOptions` (browser sign-in, `/signon`, policies), `Hosting` reads the document
+subset (`Authority`, `Audience`, `Issuer`, `RequireHttpsMetadata`, `RequiredUserScope`, claims) for
+the API host and tenant evaluation.
+
 - `Authority`, `Audience`, `ClientId` are required.
 - Authorization policies: `documentApi` (user scope from the `scope` claim) and `serviceApi`
-  (`serviceApi` scope). Both assert on JWT bearer.
+  (`serviceApi` scope). Both assert on JWT bearer. The App host names them through
+  `UserScopePolicyName` / `ServiceScopePolicyName` (defaults to `RequiredUserScope` / no service
+  policy); the Service host always registers `documentApi` and `serviceApi`.
 - `PublicBaseUrl` makes the OIDC `redirect_uri` deterministic (`PublicBaseUrl + CallbackPath`);
   it must be registered as a valid redirect URI for `ClientId` at the identity provider. When it
   is omitted the redirect is derived from the incoming request and a warning is logged.
-- `SignOnAllowedHosts` restricts the hosts that `/signon/{idToken}` may redirect back to.
+- `SignOnAllowedHosts` restricts the hosts that `/signon/{idToken}` may redirect back to,
+  `SignOnAllowedRedirectPathPrefixes` the paths it may redirect to (`/` is always allowed).
 
 ### 4.3 Storage
 
@@ -296,14 +309,15 @@ Environment-variable form (as used by `ballware-document-service.env`):
 ```
 
 - App host: cookie scheme as default, `OpenIdConnect` as default challenge, JWT bearer available
-  for direct bearer requests. Data protection uses a distinct application name per host
-  (`ballware-document-app` vs `ballware-document-service`); `KeysPath` is optional — without it
-  keys stay in-process (single instance).
+  for direct bearer requests (all registered by `Ballware.Shared.Web.Oidc`). Data protection is
+  configured for the App host only, with its own application name (`ballware-document-app`);
+  `KeysPath` is optional — without it keys stay in-process (single instance).
 - App antiforgery cookie is `.Ballware.Antiforgery`. `X-Frame-Options` is suppressed
   automatically when `ContentSecurity:FrameAncestors` allows foreign framing.
-- Sign-on: `GET /signon/{idToken}?redirect=…` validates the id token against the IdP signing
-  keys (`ValidAudience = ClientId`), establishes the session and redirects. `redirect` must be
-  relative and start with `/`, `/viewer` or `/designer`, otherwise `400`.
+- Sign-on: `GET /signon/{idToken}?redirect=…` (from `Ballware.Shared.Web.Oidc`) validates the id
+  token against the IdP signing keys (`ValidAudience = ClientId`), establishes the session and
+  redirects. `redirect` must be relative and start with `/` or one of
+  `Authorization:SignOnAllowedRedirectPathPrefixes`, otherwise `400`.
 
 ### 4.6 Framing and CORS
 
@@ -483,10 +497,11 @@ the `TestSettings__DatabasePassword` environment variable used by CI.
 - Client certificates of the platform HTTP clients are only accepted unconditionally in `DEBUG`
   builds (`#if DEBUG` around `DangerousAcceptAnyServerCertificateValidator`); Release builds
   validate them.
-- `/signon` rejects absolute or foreign-host `redirect` values, and the App host distinguishes
-  browser requests (OIDC 302 challenge) from SignalR/DevExpress transport requests
-  (`/_blazor`, `/DXX`, `/dxDR`), which receive `401` so the frontend can re-enter via `/signon`
-  instead of failing inside a circuit.
+- `/signon` rejects absolute or foreign-host `redirect` values and paths outside
+  `Authorization:SignOnAllowedRedirectPathPrefixes`, and the App host distinguishes browser
+  requests (OIDC 302 challenge) from SignalR/DevExpress transport requests (`/_blazor`, `/DXX`,
+  `/dxDR`), which receive `401` so the frontend can re-enter via `/signon` instead of failing
+  inside a circuit.
 - Identity-model PII disclosure (`IdentityModelEventSource.ShowPII`) is enabled only in Development;
   production errors are returned as RFC 7807 `application/problem+json` without exception details.
 

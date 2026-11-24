@@ -18,8 +18,11 @@ segments and require the machine scope `serviceApi`.
 
 ## Scopes → policies
 
-Both hosts register two authorization policies
-(`src/Ballware.Document.Hosting/ServiceCollectionExtensions.cs:375-395`):
+Both hosts register two authorization policies — the Service host in
+`AddBallwareDocumentApiAuthentication`
+(`src/Ballware.Document.Hosting/ServiceCollectionExtensions.cs:324-326`), the App host through
+`Ballware.Shared.Web.Oidc` with `Authorization:UserScopePolicyName` /
+`Authorization:ServiceScopePolicyName`:
 
 | Policy | Requires | Used by |
 | --- | --- | --- |
@@ -78,20 +81,24 @@ The processing-state successor endpoints apply the same mechanism through
 
 ## App host sign-on and the browser-vs-transport distinction
 
-The App host authenticates browsers through OIDC:
+The App host authenticates browsers through OIDC; the cookie/OpenID Connect stack, the sign-on
+endpoint and the challenge middlewares are provided by the shared packages
+`Ballware.Shared.Web.Oidc` / `ballware.shared.web.session` and wired up by
+`AddBallwareDocumentBrowserAuthentication`:
 
 - `GET /signon/{idToken}?redirect=…` validates the id token against the IdP signing keys
   (`ValidAudience = ClientId`), establishes the distributed session and redirects. `redirect`
-  must be relative and start with `/`, `/viewer` or `/designer`; anything else is `400`
-  (`src/Ballware.Document.Hosting/SignOnEndpointExtensions.cs`).
+  must be relative and start with `/` or one of `Authorization:SignOnAllowedRedirectPathPrefixes`
+  (`/viewer`, `/designer`); anything else is `400`
+  (`Ballware.Shared.Web.Oidc/SignOnEndpointExtensions.cs`).
 - `Authorization:PublicBaseUrl` makes the OIDC `redirect_uri` deterministic;
   `SignOnAllowedHosts` restricts redirect targets.
 
-Interactive DevExpress/Blazor circuits are **not** browser navigations. The App host's
+Interactive DevExpress/Blazor circuits are **not** browser navigations. The shared
 `ChallengeDifferentiationMiddleware` classifies requests for `/_blazor`, `/DXX` and `/dxDR`
 (Blazor circuit + DevExpress export/viewer transports) as transport requests: instead of a
 302 OIDC challenge inside a circuit they receive `401`, so the frontend can re-enter via
-`/signon` (`src/Ballware.Document.App/Middleware/ChallengeDifferentiationMiddleware.cs`).
-`SignInChallengeFallbackMiddleware` converts authorization challenges for browser requests.
+`/signon`. `SignInChallengeFallbackMiddleware` converts authorization challenges for browser
+requests.
 
 These transport endpoints are not part of the OpenAPI documents.

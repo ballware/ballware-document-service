@@ -10,7 +10,7 @@ payloads must look like.
 | --- | --- | --- |
 | `/designer?id=<documentId>` | `Ballware.Document.Engine.Dx/Components/Designer.razor` | `DxReportDesigner` for editing a document's report definition |
 | `/viewer?<report query>` | `Components/Viewer.razor` | `DxDocumentViewer` rendering the report (PDF/Skia) |
-| `/signon/{idToken}` | `Hosting/SignOnEndpointExtensions.cs` | establishes the browser session (see [tenancy-and-authorization.md](tenancy-and-authorization.md)) |
+| `/signon/{idToken}` | `Ballware.Shared.Web.Oidc/SignOnEndpointExtensions.cs` | establishes the browser session (see [tenancy-and-authorization.md](tenancy-and-authorization.md)) |
 
 Designer customization is client-side via `Engine.Dx/wwwroot/customization.js`; request culture
 is `de-DE`.

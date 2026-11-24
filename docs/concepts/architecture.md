@@ -25,9 +25,9 @@ All OpenAPI documents described in [../api/README.md](../api/README.md) belong t
 | Project | Responsibility |
 | --- | --- |
 | `Ballware.Document.Service` | API host composition (`Program.cs`, `Startup.cs`), Swagger documents, Quartz host, import/export repository hook |
-| `Ballware.Document.App` | Blazor Web App composition, `/signon` endpoint, challenge-differentiation middleware |
+| `Ballware.Document.App` | Blazor Web App composition; `/signon` and challenge middleware from `Ballware.Shared.Web.Oidc` / `ballware.shared.web.session` |
 | `Ballware.Document.Api` | Minimal-API endpoint groups: document / notification / subscription / processing-state |
-| `Ballware.Document.Hosting` | Options + validation, authentication and policies, service clients, datastore selection, metadata provider adapters, sign-on endpoint |
+| `Ballware.Document.Hosting` | Options + validation, authentication wiring (shared browser auth, JWT-only API auth), service clients, datastore selection, metadata provider adapters |
 | `Ballware.Document.Engine.Dx` | DevExpress reporting integration, report storage, datasource provider, mail/PDF generation, designer/viewer components |
 | `Ballware.Document.Jobs` | Quartz job and trigger registration (`MailOptions`, `TriggerOptions`) |
 | `Ballware.Document.Data` | Public contracts (`Document`, `Notification`, `Subscription`), repository interfaces, select-list DTOs |
@@ -69,7 +69,7 @@ app.MapProcessingStateDocumentApi("/document/processingstate");
 ## Persistence
 
 `Storage:Provider` selects `postgres` or `mssql` at startup
-(`Ballware.Document.Hosting/ServiceCollectionExtensions.cs:86-91,249-256`); both provider
+(`Ballware.Document.Hosting/ServiceCollectionExtensions.cs:77-82,242-247`); both provider
 assemblies ship in the solution with their own migration sets and consistent snake_case naming.
 Migrations run in the Service host only when `Storage:AutoMigrations` is `true`. Repositories
 are tenant-scoped everywhere.
