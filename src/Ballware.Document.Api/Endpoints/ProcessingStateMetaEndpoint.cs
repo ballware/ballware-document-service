@@ -18,14 +18,15 @@ public static class ProcessingStateMetaEndpoint
         string basePath,
         string apiTag = ApiTag,
         string apiOperationPrefix = ApiOperationPrefix,
-        string authorizationScope = "documentApi")
+        string authorizationScope = "documentApi",
+        string apiGroup = "document")
     {
         app.MapGet(basePath + "/selectlistallowedsuccessorsforentities/document", HandleSelectListAllowedSuccessorsForDocumentByIdsAsync)
             .RequireAuthorization(authorizationScope)
             .Produces<IEnumerable<ProcessingStateSelectListEntry>>()
             .Produces(StatusCodes.Status401Unauthorized)
             .WithName(apiOperationPrefix + "SelectListAllSuccessorsForDocumentByIds")
-            .WithGroupName("document")
+            .WithGroupName(apiGroup)
             .WithTags(apiTag)
             .WithSummary("Query all possible successor processing states for documents by instance ids");
         
@@ -34,7 +35,7 @@ public static class ProcessingStateMetaEndpoint
             .Produces<IEnumerable<ProcessingStateSelectListEntry>>()
             .Produces(StatusCodes.Status401Unauthorized)
             .WithName(apiOperationPrefix + "SelectListAllSuccessorsForNotificationByIds")
-            .WithGroupName("notification")
+            .WithGroupName(apiGroup)
             .WithTags(apiTag)
             .WithSummary("Query all possible successor processing states for notifications by instance ids");
         

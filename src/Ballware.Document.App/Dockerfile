@@ -40,7 +40,6 @@ COPY ./Ballware.Document.Data.Ef.SqlServer ./Ballware.Document.Data.Ef.SqlServer
 COPY ./Ballware.Document.Engine.Dx ./Ballware.Document.Engine.Dx
 COPY ./Ballware.Document.Hosting ./Ballware.Document.Hosting
 COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
-COPY ./Ballware.Document.Session ./Ballware.Document.Session
 
 WORKDIR "/src/Ballware.Document.App"
 RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username "$GITHUB_USERNAME" --password "$GITHUB_PAT" --store-password-in-clear-text

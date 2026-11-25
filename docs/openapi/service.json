@@ -1,0 +1,567 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "ballware document service API",
+    "version": "v1"
+  },
+  "paths": {
+    "/document/document/selectlistdocumentsfortenant/{tenantId}": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Query available documents for tenant",
+        "operationId": "DocumentSelectListForTenant",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentSelectListEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/document/document/documentmetadatabytenantandid/{tenantId}/{id}": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Query document metadata by tenant and id",
+        "operationId": "DocumentMetadataForTenantAndId",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/document/document/documenttemplatebehalfofuserbytenant/{tenantId}": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Query new document template for tenant",
+        "operationId": "DocumentNewForTenantAndUser",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/document/document/savedocumentbehalfofuser/{tenantId}/{userId}": {
+      "post": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Save document behalf of user",
+        "operationId": "DocumentSaveForTenantBehalfOfUser",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Document"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/document/notification/notificationmetadatabytenantandid/{tenantId}/{id}": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Query notification metadata by tenant and id",
+        "operationId": "NotificationMetadataByTenantAndId",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/document/notification/notificationmetadatabytenantandidentifier/{tenantId}/{identifier}": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Query notification metadata by tenant and identifier",
+        "operationId": "NotificationMetadataByTenantAndIdentifier",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/document/subscription/metadatabytenantandid/{tenantId}/{id}": {
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Query subscription metadata by tenant and id",
+        "operationId": "SubscriptionMetadataByTenantAndId",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/document/subscription/activebytenantandfrequency/{tenantId}/{frequency}": {
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Query active subscriptions by frequency",
+        "operationId": "SubscriptionActiveByFrequency",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "frequency",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Subscription"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/document/subscription/setsendresult/{tenantId}/{id}": {
+      "post": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "Send send result for subscription",
+        "operationId": "SubscriptionSetSendResult",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Document": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "DisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "Entity": {
+            "type": "string",
+            "nullable": true
+          },
+          "State": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReportBinary": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "ReportParameter": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentSelectListEntry": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "State": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReportParameter": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "Identifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "DocumentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "State": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "DocumentParams": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "UserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "Mail": {
+            "type": "string",
+            "nullable": true
+          },
+          "Body": {
+            "type": "string",
+            "nullable": true
+          },
+          "Attachment": {
+            "type": "boolean"
+          },
+          "AttachmentFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "NotificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "Frequency": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Active": {
+            "type": "boolean"
+          },
+          "LastSendStamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastError": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "oidc": {
+        "type": "openIdConnect",
+        "openIdConnectUrl": "https://localhost/.well-known/openid-configuration"
+      }
+    }
+  },
+  "security": [
+    { }
+  ],
+  "tags": [
+    {
+      "name": "Document"
+    },
+    {
+      "name": "Notification"
+    },
+    {
+      "name": "Subscription"
+    }
+  ]
+}

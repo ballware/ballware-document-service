@@ -7,40 +7,35 @@ using Ballware.Document.Hosting.Adapter;
 using Ballware.Document.Hosting.Configuration;
 using Ballware.Document.Hosting.Mappings;
 using Ballware.Document.Metadata;
-using Ballware.Document.Session;
-using Ballware.Document.Session.Configuration;
 using Ballware.Generic.Service.Client;
 using Ballware.Meta.Service.Client;
 using Ballware.Ml.Service.Client;
 using Ballware.Shared.Authorization;
+using Ballware.Shared.Web.Oidc;
+using Ballware.Shared.Web.Session.Configuration;
 using Ballware.Storage.Service.Client;
 using Duende.AccessTokenManagement;
 using Mapster;
 using MapsterMapper;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Ballware.Document.Hosting;
 
 public static class ServiceCollectionExtensions
 {
     private const string ClaimTypeScope = "scope";
-    private const string ServiceApiScope = "serviceApi";
+    private const string DocumentApiPolicyName = "documentApi";
+    private const string ServiceApiPolicyName = "serviceApi";
 
     public static BallwareDocumentOptions AddBallwareDocumentOptions(this IServiceCollection services, IConfiguration configuration)
     {
         AuthorizationOptions? authorizationOptions =
             configuration.GetSection("Authorization").Get<AuthorizationOptions>();
         StorageOptions? storageOptions = configuration.GetSection("Storage").Get<StorageOptions>();
-        SessionOptions? sessionOptions = configuration.GetSection("Session").Get<SessionOptions>();
+        WebSessionOptions? sessionOptions = configuration.GetSection("Session").Get<WebSessionOptions>();
         ServiceClientOptions? metaClientOptions = configuration.GetSection("MetaClient").Get<ServiceClientOptions>();
         ServiceClientOptions? storageClientOptions = configuration.GetSection("StorageClient").Get<ServiceClientOptions>();
         ServiceClientOptions? genericClientOptions = configuration.GetSection("GenericClient").Get<ServiceClientOptions>();
@@ -54,7 +49,7 @@ public static class ServiceCollectionExtensions
             .Bind(configuration.GetSection("Storage"))
             .ValidateDataAnnotations();
 
-        services.AddOptionsWithValidateOnStart<SessionOptions>()
+        services.AddOptionsWithValidateOnStart<WebSessionOptions>()
             .Bind(configuration.GetSection("Session"))
             .ValidateDataAnnotations();
 
@@ -79,10 +74,6 @@ public static class ServiceCollectionExtensions
             throw new ConfigurationException("Required configuration for authorization or storage is missing");
         }
 
-        // wirft bei unzulässiger Angabe, damit sie nicht verschleiert als Abweisung der
-        // OIDC-Challenge beim IdP endet
-        OpenIdConnectPublicRedirectExtensions.NormalizePublicBaseUrl(authorizationOptions.PublicBaseUrl);
-
         var validProviders = new[] { "mssql", "postgres" };
 
         if (!validProviders.Contains(storageOptions.Provider))
@@ -92,7 +83,7 @@ public static class ServiceCollectionExtensions
 
         if (sessionOptions == null)
         {
-            sessionOptions = new SessionOptions();
+            sessionOptions = new WebSessionOptions();
         }
 
         if (metaClientOptions == null)
@@ -286,114 +277,72 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddBallwareDocumentAuthentication(this IServiceCollection services, BallwareDocumentOptions options, bool withSession, string dataProtectionApplicationName, string? dataProtectionKeysPath = null)
+    public static IServiceCollection AddBallwareDocumentBrowserAuthentication(this IServiceCollection services, BallwareDocumentOptions options, IConfiguration configuration, string dataProtectionApplicationName, string? dataProtectionKeysPath = null)
+    {
+        services.AddMemoryCache();
+        services.AddDistributedMemoryCache();
+
+        // Cookie-, OpenIdConnect- und JwtBearer-Schemas, Sitzungs- und Challenge-Behandlung samt
+        // deterministischem redirect_uri stammen aus Ballware.Shared.Web.Oidc / Ballware.Shared.Web.Session.
+        services.AddBallwareBrowserAuthorization(configuration, options.Session);
+
+        var dataProtection = services.AddDataProtection();
+
+        dataProtection.SetApplicationName(dataProtectionApplicationName);
+
+        if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+        {
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+        }
+
+        return services.AddBallwareDocumentAuthorizationUtils(options.Authorization);
+    }
+
+    public static IServiceCollection AddBallwareDocumentApiAuthentication(this IServiceCollection services, BallwareDocumentOptions options)
     {
         var authorizationOptions = options.Authorization;
 
         services.AddMemoryCache();
 
-        if (withSession)
-        {
-            services.AddDistributedMemoryCache();
-
-            var dataProtection = services.AddDataProtection();
-
-            dataProtection.SetApplicationName(dataProtectionApplicationName);
-
-            if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+        services.AddAuthentication(authenticationOptions =>
             {
-                dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
-            }
-
-            services.AddAuthentication(authenticationOptions =>
-                {
-                    authenticationOptions.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    authenticationOptions.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-                })
-                .AddCookie()
-                .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, openIdConnectOptions =>
-                {
-                    openIdConnectOptions.Authority = authorizationOptions.Authority;
-                    openIdConnectOptions.ClientId = authorizationOptions.ClientId;
-                    openIdConnectOptions.ClientSecret = null;
-                    openIdConnectOptions.ResponseType = "code";
-                    openIdConnectOptions.Scope.Add("openid");
-                    openIdConnectOptions.Scope.Add("profile");
-                    openIdConnectOptions.Scope.Add(authorizationOptions.RequiredUserScope);
-                    openIdConnectOptions.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
-                    openIdConnectOptions.TokenValidationParameters.ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority;
-
-                    openIdConnectOptions.RegisterBallwareSessionTokenHandling();
-                    openIdConnectOptions.RegisterBallwarePublicRedirectUriHandling(authorizationOptions);
-                })
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtBearerOptions =>
-                {
-                    jwtBearerOptions.MapInboundClaims = false;
-                    jwtBearerOptions.Authority = authorizationOptions.Authority;
-                    jwtBearerOptions.Audience = authorizationOptions.Audience;
-                    jwtBearerOptions.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
-                    jwtBearerOptions.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-                    {
-                        ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority
-                    };
-                });
-
-            services.AddSingleton<ConfigurationManager<OpenIdConnectConfiguration>>(sp =>
+                authenticationOptions.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                authenticationOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtBearerOptions =>
             {
-                var openIdConnectOptions = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
-                    .Get(OpenIdConnectDefaults.AuthenticationScheme);
-
-                var retriever = new HttpDocumentRetriever { RequireHttps = authorizationOptions.RequireHttpsMetadata };
-
-                return new ConfigurationManager<OpenIdConnectConfiguration>(
-                    openIdConnectOptions.Authority!.TrimEnd('/') + "/.well-known/openid-configuration",
-                    new OpenIdConnectConfigurationRetriever(), retriever);
+                jwtBearerOptions.MapInboundClaims = false;
+                jwtBearerOptions.Authority = authorizationOptions.Authority;
+                jwtBearerOptions.Audience = authorizationOptions.Audience;
+                jwtBearerOptions.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
+                jwtBearerOptions.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                {
+                    ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority
+                };
             });
 
-            services.AddBallwareSession(options.Session);
-        }
-        else
-        {
-            services.AddAuthentication(authenticationOptions =>
-                {
-                    authenticationOptions.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                    authenticationOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtBearerOptions =>
-                {
-                    jwtBearerOptions.MapInboundClaims = false;
-                    jwtBearerOptions.Authority = authorizationOptions.Authority;
-                    jwtBearerOptions.Audience = authorizationOptions.Audience;
-                    jwtBearerOptions.RequireHttpsMetadata = authorizationOptions.RequireHttpsMetadata;
-                    jwtBearerOptions.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-                    {
-                        ValidIssuer = authorizationOptions.Issuer ?? authorizationOptions.Authority
-                    };
-                });
-        }
-
         services.AddAuthorizationBuilder()
-            .AddPolicy("documentApi", policy => policy
-                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-                .RequireAuthenticatedUser()
-                .RequireAssertion(context =>
-                    context.User
-                        .Claims
-                        .Where(c => ClaimTypeScope == c.Type)
-                        .SelectMany(c => c.Value.Split(' '))
-                        .Any(s => s.Equals(authorizationOptions.RequiredUserScope, StringComparison.Ordinal)))
-            )
-            .AddPolicy("serviceApi", policy => policy
-                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-                .RequireAuthenticatedUser()
-                .RequireAssertion(context =>
-                    context.User
-                        .Claims
-                        .Where(c => ClaimTypeScope == c.Type)
-                        .SelectMany(c => c.Value.Split(' '))
-                        .Any(s => s.Equals(ServiceApiScope, StringComparison.Ordinal)))
-            );
+            .AddPolicy(DocumentApiPolicyName, policy => RequireScopeAssertion(policy, authorizationOptions.RequiredUserScope))
+            .AddPolicy(ServiceApiPolicyName, policy => RequireScopeAssertion(policy, ServiceApiPolicyName));
 
+        return services.AddBallwareDocumentAuthorizationUtils(authorizationOptions);
+    }
+
+    private static void RequireScopeAssertion(Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder policy, string scope)
+    {
+        policy
+            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User
+                    .Claims
+                    .Where(c => ClaimTypeScope == c.Type)
+                    .SelectMany(c => c.Value.Split(' '))
+                    .Any(s => s.Equals(scope, StringComparison.Ordinal)));
+    }
+
+    private static IServiceCollection AddBallwareDocumentAuthorizationUtils(this IServiceCollection services, AuthorizationOptions authorizationOptions)
+    {
         services.AddBallwareSharedAuthorizationUtils(authorizationOptions.TenantClaim, authorizationOptions.UserIdClaim, authorizationOptions.RightClaim);
 
         return services;

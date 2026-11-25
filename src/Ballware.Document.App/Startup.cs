@@ -1,10 +1,10 @@
 using System.Globalization;
 using Ballware.Document.App.Components;
-using Ballware.Document.App.Middleware;
 using Ballware.Document.Engine.Dx;
 using Ballware.Document.Hosting;
-using Ballware.Document.Hosting.Configuration;
-using Ballware.Document.Session;
+using Ballware.Shared.Web.Oidc;
+using Ballware.Shared.Web.Oidc.Configuration;
+using Ballware.Shared.Web.Session;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -64,7 +64,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
     {
         BallwareDocumentOptions documentOptions = Services.AddBallwareDocumentOptions(Configuration);
 
-        Services.AddBallwareDocumentAuthentication(documentOptions, withSession: true, "ballware-document-app", Configuration["DataProtection:KeysPath"]);
+        Services.AddBallwareDocumentBrowserAuthentication(documentOptions, Configuration, "ballware-document-app", Configuration["DataProtection:KeysPath"]);
 
         var detailedErrors = Configuration.GetValue<bool?>("DetailedErrors") ?? Environment.IsDevelopment();
 
@@ -95,7 +95,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
     public void InitializeApp(WebApplication app)
     {
-        var authorizationOptions = app.Services.GetRequiredService<IOptions<AuthorizationOptions>>().Value;
+        var authorizationOptions = app.Services.GetRequiredService<IOptions<BrowserAuthorizationOptions>>().Value;
 
         if (string.IsNullOrWhiteSpace(authorizationOptions.PublicBaseUrl))
         {
@@ -144,14 +144,14 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         app.UseRouting();
 
-        app.UseBallwareSession();
+        app.UseBallwareWebSession();
 
-        app.UseMiddleware<ChallengeDifferentiationMiddleware>();
+        app.UseBallwareChallengeDifferentiation();
 
         app.UseAuthentication();
 
         // muss die Autorisierungsmiddleware umschließen, deren Challenge die IdP-Fehler auslöst
-        app.UseMiddleware<SignInChallengeFallbackMiddleware>();
+        app.UseBallwareSignInChallengeFallback();
 
         app.UseAuthorization();
         app.UseAntiforgery();
@@ -166,7 +166,7 @@ public class Startup(IWebHostEnvironment environment, ConfigurationManager confi
 
         app.UseBallwareDevExpressReportingBlazor();
 
-        app.MapBallwareDocumentSignOnEndpoint();
+        app.MapBallwareSignOnEndpoint();
 
         app.MapRazorComponents<Ballware.Document.App.Components.App>()
             .AddAdditionalAssemblies(typeof(Ballware.Document.Engine.Dx.Components.Designer).Assembly)

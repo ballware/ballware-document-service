@@ -41,7 +41,6 @@ COPY ./Ballware.Document.Hosting ./Ballware.Document.Hosting
 COPY ./Ballware.Document.Jobs ./Ballware.Document.Jobs
 COPY ./Ballware.Document.Metadata ./Ballware.Document.Metadata
 COPY ./Ballware.Document.Service ./Ballware.Document.Service
-COPY ./Ballware.Document.Session ./Ballware.Document.Session
 
 WORKDIR "/src/Ballware.Document.Service"
 RUN dotnet nuget add source "https://nuget.pkg.github.com/ballware/index.json" --name github --username "$GITHUB_USERNAME" --password "$GITHUB_PAT" --store-password-in-clear-text

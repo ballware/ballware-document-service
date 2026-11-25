@@ -1,0 +1,23 @@
+{
+  "source": "Swashbuckle.AspNetCore.Cli swagger tofile",
+  "toolVersion": "10.3.0",
+  "environment": "Swagger",
+  "serviceVersion": "v1.0.0-50-gf30ce5e-dirty",
+  "fetchedAt": "2026-11-21T14:07:29Z",
+  "documents": {
+    "document": {
+      "file": "document.json",
+      "openapi": "3.0.4",
+      "title": "ballware document user API",
+      "pathCount": 44,
+      "schemaCount": 9
+    },
+    "service": {
+      "file": "service.json",
+      "openapi": "3.0.4",
+      "title": "ballware document service API",
+      "pathCount": 9,
+      "schemaCount": 4
+    }
+  }
+}
